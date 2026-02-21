@@ -1,0 +1,42 @@
+{
+  "name": "exportflow-v4",
+  "version": "1.0.0",
+  "description": "``` exportflow-v4/ ├── .cursorrules                    # Règles Cursor (copier à la racine) └── docs/     ├── CURSOR_AUDIT_PROMPT.md      # Prompt d'audit à copier dans Cursor     ├── NEW_FEATURES.md             # Specs des nouvelles fonctionnalités     ├── MULTI_TENANT_ARCHITECTURE.md # Architecture multi-tenant détaillée     ├── PRISMA_SCHEMA.md            # Schéma base de données     ├── ICP_SCORECARD.md            # Scorecard qualification clients     └── VALIDATION_PLAN.md          # Plan de validation 6 semaines ```",
+  "private": true,
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.18.2",
+    "lucide-static": "^0.575.0",
+    "next": "^14.2.35",
+    "next-intl": "^4.8.3",
+    "next-themes": "^0.4.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^3.5.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.0",
+    "@types/node": "^25.3.0",
+    "@types/react": "^19.2.14",
+    "autoprefixer": "^10.4.24",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.2.0",
+    "typescript": "^5.9.3"
+  }
+}

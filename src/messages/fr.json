@@ -1,0 +1,127 @@
+{
+  "nav": {
+    "features": "Fonctionnalités",
+    "pricing": "Tarifs",
+    "customers": "Clients",
+    "about": "À propos",
+    "contact": "Contact",
+    "login": "Connexion",
+    "signup": "Essai gratuit",
+    "demo": "Réserver une démo"
+  },
+  "core": {
+    "slogan": "Passez du temps à grandir, pas à traiter des commandes.",
+    "value_proposition": "Le portail de commande qui donne à votre entreprise d'export une image mondiale."
+  },
+  "hero": {
+    "title": "Passez du temps à grandir,",
+    "title_highlight": "pas à traiter des commandes.",
+    "subtitle": "Offrez à vos clients un portail de commande professionnel. Regardez les commandes arriver. Concentrez-vous sur l'essentiel.",
+    "cta_primary": "Essai Gratuit",
+    "cta_secondary": "Voir Comment Ça Marche",
+    "note": "14 jours gratuits • Sans carte bancaire"
+  },
+  "pain_points": {
+    "section_title": "Ça vous dit quelque chose ?",
+    "items": [
+      { "icon": "📧", "title": "Des fils d'emails sans fin", "description": "Les clients envoient des commandes par email. Vous copiez dans Excel. Ils demandent des modifications. Vous mettez à jour. Ils redemandent. À l'infini." },
+      { "icon": "📊", "title": "Excel partout", "description": "Listes de prix, formulaires de commande, factures... tout dans différents fichiers Excel. Une erreur de copier-coller et c'est le chaos." },
+      { "icon": "🔄", "title": "Les mêmes questions, chaque jour", "description": "'Quel est le prix de X ?' 'Quel est le MOQ ?' 'Avez-vous Y en stock ?' Votre équipe répond aux mêmes questions encore et encore." },
+      { "icon": "📄", "title": "Les documents prennent une éternité", "description": "Factures proforma, factures commerciales, listes de colisage... créées manuellement pour chaque commande." }
+    ]
+  },
+  "solution": {
+    "section_title": "Il y a une meilleure façon",
+    "section_subtitle": "ExportFlow offre à vos clients un portail de commande professionnel. Ils commandent eux-mêmes. Vous vous concentrez sur la croissance.",
+    "benefits": [
+      { "icon": "🏪", "title": "Votre propre portail brandé", "description": "Votre logo, vos couleurs, votre domaine. Les clients voient une vitrine professionnelle, pas des emails éparpillés." },
+      { "icon": "⏱️", "title": "Commandes entrantes, documents sortants", "description": "Les clients passent commande. Factures, proformas et listes de colisage se génèrent automatiquement." },
+      { "icon": "🌍", "title": "Fonctionne dans toutes les langues", "description": "Votre portail en anglais pour les clients, votre tableau de bord en chinois pour votre équipe. Tout le monde est content." },
+      { "icon": "💰", "title": "Prix différents pour différents clients", "description": "Les distributeurs voient les prix distributeurs. Les détaillants voient les prix détail. Automatiquement." }
+    ]
+  },
+  "how_it_works": {
+    "section_title": "Opérationnel en quelques minutes",
+    "steps": [
+      { "number": "1", "title": "Importez vos produits", "description": "Téléchargez votre liste Excel. Nous l'organisons en un beau catalogue." },
+      { "number": "2", "title": "Invitez vos clients", "description": "Envoyez-leur le lien vers votre portail. Ils créent un compte en 30 secondes." },
+      { "number": "3", "title": "Regardez les commandes arriver", "description": "Les clients parcourent, commandent, et vous êtes notifié. Les documents se génèrent automatiquement." }
+    ]
+  },
+  "testimonials": {
+    "items": [
+      { "quote": "Avant ExportFlow, mon équipe passait des heures à traduire les commandes Excel en chinois pour la production. Maintenant ExportFlow le fait pour nous ! Plus de copier-coller pour les factures et documents d'export. Nos clients commandent directement via leur portail. C'est comme avoir un employé supplémentaire.", "author": "Sarah Chen", "title": "Responsable des Opérations", "company": "Shenzhen Hardware Co.", "country": "Chine", "flag": "🇨🇳", "highlight": "C'est comme avoir un employé supplémentaire." },
+      { "quote": "Mes clients grossistes appelaient ou envoyaient des emails pour commander, et je leur renvoyais une facture faite sur Excel. Maintenant je regarde simplement les commandes arriver et je m'occupe de celles qui nécessitent une attention particulière. Je peux enfin me concentrer sur la prospection.", "author": "Michael Wang", "title": "Directeur Export", "company": "Ningbo Marine Parts", "country": "Chine", "flag": "🇨🇳", "highlight": "Je regarde simplement les commandes arriver." },
+      { "quote": "Nos clients envoyaient des emails pour demander les prix, MOQ, specs... On passait des heures à répondre aux mêmes questions. Maintenant tout est dans leur portail. Ils parcourent, commandent, on produit. Simple.", "author": "David Liu", "title": "Directeur Commercial", "company": "Yiwu Home & Garden Export", "country": "Chine", "flag": "🇨🇳", "highlight": "Ils parcourent, commandent, on produit." },
+      { "quote": "Quand nous avons envoyé le lien du portail à nos clients, ils étaient impressionnés. Ils ont dit 'ça ressemble à un système de Fortune 500'. On n'est que 15, mais maintenant on a l'air d'une multinationale. ExportFlow s'est rentabilisé dès le premier mois.", "author": "Mehmet Yılmaz", "title": "Fondateur", "company": "Anatolia Textiles Export", "country": "Turquie", "flag": "🇹🇷", "highlight": "Ça ressemble à un système de Fortune 500." },
+      { "quote": "Avant, ajouter des clients signifiait embaucher plus de personnel. Maintenant notre équipe de 4 gère ce qui nécessitait 10 personnes avant. Le portail fait le gros du travail.", "author": "Priya Sharma", "title": "Directrice des Opérations", "company": "Mumbai Industrial Supplies", "country": "Inde", "flag": "🇮🇳", "highlight": "Notre équipe de 4 gère ce qui nécessitait 10 personnes." }
+    ]
+  },
+  "pricing": {
+    "section_title": "Simple, transparent pricing",
+    "section_subtitle": "14-day free trial with personalized onboarding. Save 15% with annual billing.",
+    "toggle_monthly": "Monthly",
+    "toggle_annual": "Annual",
+    "save_badge": "Save 15%",
+    "popular_badge": "Most Popular",
+    "annual_only": "Annual billing only",
+    "plans": [
+      { "name": "Starter", "description": "For small exporters getting started", "price_monthly": "€49", "price_annual": "€42", "period": "/month", "features": ["2 team members", "100 orders/month", "500 products", "1 price tier", "Basic portal", "Email support"], "cta": "Start Free Trial" },
+      { "name": "Pro", "description": "For growing export businesses", "price_monthly": "€149", "price_annual": "€127", "period": "/month", "popular": true, "features": ["5 team members", "500 orders/month", "Unlimited products", "3 price tiers", "Full branding", "Proforma invoices", "Priority email support"], "cta": "Start Free Trial" },
+      { "name": "Business", "description": "For established export operations", "price_monthly": "€299", "price_annual": "€254", "period": "/month", "features": ["15 team members", "2,000 orders/month", "Unlimited products", "Unlimited price tiers", "Custom domain", "T/T payment tracking", "Priority support"], "cta": "Start Free Trial" },
+      { "name": "Enterprise", "description": "For large organizations", "price_monthly": "€499", "price_annual": "€499", "period": "/month", "annual_only": true, "features": ["Unlimited team members", "Unlimited orders", "Unlimited products", "Unlimited price tiers", "Custom domain", "T/T payment tracking", "3 custom requests/year", "Dedicated WhatsApp support"], "cta": "Contact Us" }
+    ],
+    "price_tiers_title": "What are Price Tiers?",
+    "price_tiers_description": "Set different price levels for different customer types. Assign each customer to a tier, and they automatically see their prices in the portal.",
+    "price_tiers_example": "Example: Widget A → Distributor €10 | Retailer €12.50 | VIP €15",
+    "guarantee_title": "30-Day Money-Back Guarantee",
+    "guarantee_text": "Not satisfied? Get a full refund within 30 days. No questions asked.",
+    "faq": [
+      { "question": "Is there a free trial?", "answer": "Yes! Try any plan free for 14 days. We'll personally help you set up your portal. No credit card required." },
+      { "question": "Can I switch plans anytime?", "answer": "Yes, upgrade or downgrade anytime. Changes take effect on your next billing cycle." },
+      { "question": "What payment methods do you accept?", "answer": "We accept all major credit cards and PayPal. Annual plans can also pay by bank transfer." },
+      { "question": "What are custom requests (Enterprise)?", "answer": "Small customizations like adding a field, modifying a PDF template, or creating a simple report. Not major features or integrations." }
+    ]
+  },
+  "features": {
+    "page_title": "Everything you need to manage export orders",
+    "page_subtitle": "From product catalog to shipping documents, ExportFlow handles it all.",
+    "features_list": [
+      { "id": "portal", "title": "Branded Ordering Portal", "description": "Your customers get their own professional portal with your logo, colors, and domain. They browse your catalog, see their prices, and place orders 24/7.", "benefits": ["Your branding, your domain", "24/7 self-service ordering", "Mobile-friendly", "Multi-language support"] },
+      { "id": "catalog", "title": "Smart Product Catalog", "description": "Upload your Excel and we organize it into a beautiful, searchable catalog. Products with images, specs, MOQs, and stock levels.", "benefits": ["Import from Excel in minutes", "Product images and specs", "Stock levels display", "Category organization"] },
+      { "id": "pricing", "title": "Flexible Pricing (Price Tiers)", "description": "Different customers see different prices. Distributors, retailers, VIPs - each sees only their negotiated prices.", "benefits": ["Unlimited price tiers", "Per-customer pricing", "Automatic price display", "No more price list confusion"] },
+      { "id": "orders", "title": "Order Management", "description": "All orders in one place. Track status, make modifications, handle substitutions. Your team works together seamlessly.", "benefits": ["Centralized order tracking", "Order modification workflow", "Team collaboration", "Order history"] },
+      { "id": "documents", "title": "Automatic Documents", "description": "Proforma invoices, commercial invoices, packing lists - generated automatically from every order. No more manual document creation.", "benefits": ["Proforma invoices", "Commercial invoices", "Packing lists", "PDF export"] },
+      { "id": "multilingual", "title": "Multi-Language Support", "description": "Your portal in English, French, Spanish for customers. Your dashboard in Chinese for your team. Everyone works in their language.", "benefits": ["Customer portal: 5 languages", "Admin dashboard: Chinese", "Automatic translations", "Global ready"] }
+    ]
+  },
+  "contact": {
+    "page_title": "Get in touch",
+    "page_subtitle": "Have questions? We'd love to hear from you.",
+    "email": "hello@exportflow.io",
+    "response_time": "We typically respond within 24 hours",
+    "form": { "name": "Your name", "email": "Email address", "company": "Company name", "message": "How can we help?", "submit": "Send Message" },
+    "wechat_title": "WeChat",
+    "wechat_subtitle": "Scan to connect on WeChat"
+  },
+  "footer": {
+    "product": { "title": "Product", "links": ["Features", "Pricing", "Customers", "Changelog"] },
+    "resources": { "title": "Resources", "links": ["Documentation", "Help Center", "API Reference", "Status"] },
+    "company": { "title": "Company", "links": ["About", "Blog", "Contact", "Careers"] },
+    "legal": { "title": "Legal", "links": ["Privacy Policy", "Terms of Service", "Cookie Policy"] },
+    "tagline": "Made with ❤️ for exporters worldwide",
+    "copyright": "© 2025 ExportFlow. All rights reserved."
+  },
+  "auth": {
+    "signup": { "title": "Start your free trial", "subtitle": "14 days free. No credit card required.", "fields": { "company": "Company name", "name": "Your name", "email": "Work email", "password": "Password" }, "submit": "Create Account", "login_link": "Already have an account? Sign in", "benefits": ["14-day free trial", "Personalized onboarding", "Cancel anytime", "30-day money-back guarantee"] },
+    "login": { "title": "Welcome back", "subtitle": "Sign in to your ExportFlow account", "fields": { "email": "Email", "password": "Password" }, "submit": "Sign In", "forgot": "Forgot password?", "signup_link": "Don't have an account? Start free trial" }
+  },
+  "about": {
+    "title": "Built by exporters, for exporters",
+    "story": "ExportFlow was born from frustration. After years of managing thousands of orders through scattered Excel files and endless email threads, our founder knew there had to be a better way. Late nights reconciling orders, customers asking 'did you receive my order?', documents created manually one by one... ExportFlow is the tool we wished existed.",
+    "short_story": "Built by an exporter who was tired of Excel chaos and email overload.",
+    "location": "Based in France. Serving exporters worldwide.",
+    "mission": "Our mission: help export businesses look professional, save time, and focus on growth."
+  }
+}
+

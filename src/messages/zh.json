@@ -1,0 +1,295 @@
+{
+  "nav": {
+    "features": "功能",
+    "pricing": "价格",
+    "customers": "客户案例",
+    "about": "关于我们",
+    "contact": "联系我们",
+    "login": "登录",
+    "signup": "免费试用",
+    "demo": "预约演示"
+  },
+  "core": {
+    "slogan": "把时间花在业务增长，而非处理订单。",
+    "value_proposition": "让您的出口业务看起来像世界500强的订购门户。"
+  },
+  "hero": {
+    "title": "把时间花在业务增长，",
+    "title_highlight": "而非处理订单。",
+    "subtitle": "给客户一个专业的订购门户。订单自动涌入。专注真正重要的事。",
+    "cta_primary": "免费试用",
+    "cta_secondary": "了解如何运作",
+    "note": "14天免费试用 • 无需信用卡"
+  },
+  "pain_points": {
+    "section_title": "是不是很熟悉？",
+    "items": [
+      {
+        "icon": "📧",
+        "title": "无尽的邮件往来",
+        "description": "客户发邮件下单，您复制到Excel，他们要求修改，您更新，他们再修改，如此反复。"
+      },
+      {
+        "icon": "📊",
+        "title": "Excel满天飞",
+        "description": "价格表、订单表、发票...都在不同的Excel文件里。一次复制粘贴错误就会出大问题。"
+      },
+      {
+        "icon": "🔄",
+        "title": "每天重复回答相同的问题",
+        "description": "'X产品什么价格？''最小起订量多少？''Y有库存吗？'您的团队一遍又一遍回答同样的问题。"
+      },
+      {
+        "icon": "📄",
+        "title": "文件制作耗时太久",
+        "description": "形式发票、商业发票、装箱单...每笔订单都要手动制作。"
+      }
+    ]
+  },
+  "solution": {
+    "section_title": "有更好的方式",
+    "section_subtitle": "ExportFlow为您的客户提供专业的订购门户。他们自助下单，您专注于业务增长。",
+    "benefits": [
+      {
+        "icon": "🏪",
+        "title": "您专属的品牌门户",
+        "description": "您的logo、您的颜色、您的域名。客户看到的是专业的店面，而不是零散的邮件。"
+      },
+      {
+        "icon": "⏱️",
+        "title": "订单进来，文件出去",
+        "description": "客户下单后，发票、形式发票和装箱单自动生成。"
+      },
+      {
+        "icon": "🌍",
+        "title": "支持任何语言",
+        "description": "客户看到英文门户，您的团队使用中文后台。皆大欢喜。"
+      },
+      {
+        "icon": "💰",
+        "title": "不同客户，不同价格",
+        "description": "经销商看到经销商价格，零售商看到零售价格。全自动。"
+      }
+    ]
+  },
+  "how_it_works": {
+    "section_title": "几分钟即可上线",
+    "steps": [
+      {
+        "number": "1",
+        "title": "导入您的产品",
+        "description": "上传Excel产品列表，我们会将其整理成精美的目录。"
+      },
+      {
+        "number": "2",
+        "title": "邀请您的客户",
+        "description": "发送门户链接给他们，30秒内即可创建账户。"
+      },
+      {
+        "number": "3",
+        "title": "坐等订单涌入",
+        "description": "客户浏览、下单，您收到通知，文件自动生成。"
+      }
+    ]
+  },
+  "testimonials": {
+    "items": [
+      {
+        "quote": "以前，我的团队花费数小时将Excel订单翻译成中文交给生产部门。现在ExportFlow自动完成！不再需要复制粘贴来制作发票和出口文件。客户直接通过门户下单。就像多了一个员工。",
+        "author": "Sarah Chen",
+        "title": "运营经理",
+        "company": "深圳五金有限公司",
+        "country": "中国",
+        "flag": "🇨🇳",
+        "highlight": "就像多了一个员工。"
+      },
+      {
+        "quote": "以前批发客户打电话或发邮件下单，我再用Excel做发票发回去。现在我只需要看着订单涌入，处理那些需要特别关注的。我终于可以专注于开发新客户了。",
+        "author": "Michael Wang",
+        "title": "出口总监",
+        "company": "宁波船舶配件",
+        "country": "中国",
+        "flag": "🇨🇳",
+        "highlight": "我只需要看着订单涌入。"
+      },
+      {
+        "quote": "以前客户总是发邮件问价格、起订量、规格...我们花几个小时回答同样的问题。现在一切都在他们的门户里。他们浏览、下单、我们生产。就这么简单。",
+        "author": "David Liu",
+        "title": "销售经理",
+        "company": "义乌家居园艺出口",
+        "country": "中国",
+        "flag": "🇨🇳",
+        "highlight": "他们浏览、下单、我们生产。"
+      },
+      {
+        "quote": "当我们把订购门户链接发给客户时，他们印象深刻。他们说'这看起来像世界500强的系统'。我们只有15个人，但现在看起来很国际化。ExportFlow第一个月就回本了。",
+        "author": "Mehmet Yılmaz",
+        "title": "创始人",
+        "company": "安纳托利亚纺织出口",
+        "country": "土耳其",
+        "flag": "🇹🇷",
+        "highlight": "这看起来像世界500强的系统。"
+      },
+      {
+        "quote": "以前，增加客户就意味着招更多人。现在我们4个人的团队能处理以前10个人的工作量。门户承担了繁重的工作。",
+        "author": "Priya Sharma",
+        "title": "首席运营官",
+        "company": "孟买工业供应",
+        "country": "印度",
+        "flag": "🇮🇳",
+        "highlight": "4个人处理以前10个人的工作量。"
+      }
+    ]
+  },
+  "pricing": {
+    "section_title": "简单透明的定价",
+    "section_subtitle": "14天免费试用，专人协助配置。年付享受85折优惠。",
+    "toggle_monthly": "月付",
+    "toggle_annual": "年付",
+    "save_badge": "省15%",
+    "popular_badge": "最受欢迎",
+    "annual_only": "仅限年付",
+    "plans": [
+      {
+        "name": "入门版",
+        "description": "适合刚起步的小型出口商",
+        "price_monthly": "€49",
+        "price_annual": "€42",
+        "period": "/月",
+        "features": ["2个用户", "100单/月", "500个产品", "1个价格层级", "基础门户", "邮件支持"],
+        "cta": "免费试用"
+      },
+      {
+        "name": "专业版",
+        "description": "适合成长中的出口企业",
+        "price_monthly": "€149",
+        "price_annual": "€127",
+        "period": "/月",
+        "popular": true,
+        "features": ["5个用户", "500单/月", "无限产品", "3个价格层级", "完整品牌定制", "形式发票", "优先邮件支持"],
+        "cta": "免费试用"
+      },
+      {
+        "name": "商业版",
+        "description": "适合成熟的出口业务",
+        "price_monthly": "€299",
+        "price_annual": "€254",
+        "period": "/月",
+        "features": ["15个用户", "2000单/月", "无限产品", "无限价格层级", "自定义域名", "T/T收款追踪", "优先支持"],
+        "cta": "免费试用"
+      },
+      {
+        "name": "企业版",
+        "description": "适合大型组织",
+        "price_monthly": "€499",
+        "price_annual": "€499",
+        "period": "/月",
+        "annual_only": true,
+        "features": ["无限用户", "无限订单", "无限产品", "无限价格层级", "自定义域名", "T/T收款追踪", "每年3次定制需求", "专属WhatsApp/微信支持"],
+        "cta": "联系我们"
+      }
+    ],
+    "price_tiers_title": "什么是价格层级？",
+    "price_tiers_description": "为不同类型的客户设置不同的价格水平。将每个客户分配到一个层级，他们在门户中自动看到自己的价格。",
+    "price_tiers_example": "示例：产品A → 经销商 €10 | 零售商 €12.50 | VIP €15",
+    "guarantee_title": "30天无理由退款",
+    "guarantee_text": "不满意？30天内全额退款，无需任何理由。",
+    "faq": [
+      { "question": "有免费试用吗？", "answer": "有！任何套餐均可免费试用14天，我们会亲自协助您配置门户。无需信用卡。" },
+      { "question": "可以随时切换套餐吗？", "answer": "可以，随时升级或降级。变更在下一个账单周期生效。" },
+      { "question": "支持哪些付款方式？", "answer": "支持所有主流信用卡和PayPal。年付可使用银行转账。" },
+      { "question": "什么是定制需求（企业版）？", "answer": "小型定制，如添加字段、修改PDF模板或创建简单报表。不包括重大功能或集成。" }
+    ]
+  },
+  "features": {
+    "page_title": "管理出口订单所需的一切",
+    "page_subtitle": "从产品目录到出货文件，ExportFlow全部搞定。",
+    "features_list": [
+      {
+        "id": "portal",
+        "title": "品牌订购门户",
+        "description": "您的客户拥有自己的专业门户，带有您的logo、颜色和域名。他们可以浏览目录、查看价格、全天候下单。",
+        "benefits": ["您的品牌，您的域名", "24/7自助下单", "移动端友好", "多语言支持"]
+      },
+      {
+        "id": "catalog",
+        "title": "智能产品目录",
+        "description": "上传Excel，我们将其整理成精美、可搜索的目录。产品包含图片、规格、起订量和库存。",
+        "benefits": ["几分钟内从Excel导入", "产品图片和规格", "库存水平显示", "分类组织"]
+      },
+      {
+        "id": "pricing",
+        "title": "灵活定价（价格层级）",
+        "description": "不同客户看到不同价格。经销商、零售商、VIP——各自只看到自己的协商价格。",
+        "benefits": ["无限价格层级", "按客户定价", "自动价格显示", "告别价格表混乱"]
+      },
+      {
+        "id": "orders",
+        "title": "订单管理",
+        "description": "所有订单集中一处。跟踪状态、修改订单、处理替换。团队无缝协作。",
+        "benefits": ["集中订单跟踪", "订单修改流程", "团队协作", "订单历史"]
+      },
+      {
+        "id": "documents",
+        "title": "自动生成文件",
+        "description": "形式发票、商业发票、装箱单——每笔订单自动生成。告别手动制作文件。",
+        "benefits": ["形式发票", "商业发票", "装箱单", "PDF导出"]
+      },
+      {
+        "id": "multilingual",
+        "title": "多语言支持",
+        "description": "客户门户支持英语、法语、西班牙语。您的后台使用中文。每个人都用自己的语言工作。",
+        "benefits": ["客户门户：5种语言", "管理后台：中文", "自动翻译", "全球就绪"]
+      }
+    ]
+  },
+  "contact": {
+    "page_title": "联系我们",
+    "page_subtitle": "有问题？我们很乐意听取您的意见。",
+    "email": "hello@exportflow.io",
+    "response_time": "我们通常在24小时内回复",
+    "form": {
+      "name": "您的姓名",
+      "email": "邮箱地址",
+      "company": "公司名称",
+      "message": "有什么可以帮您？",
+      "submit": "发送消息"
+    },
+    "wechat_title": "微信",
+    "wechat_subtitle": "扫码添加微信"
+  },
+  "footer": {
+    "product": { "title": "产品", "links": ["功能", "定价", "客户案例", "更新日志"] },
+    "resources": { "title": "资源", "links": ["文档", "帮助中心", "API参考", "系统状态"] },
+    "company": { "title": "公司", "links": ["关于我们", "博客", "联系我们", "招聘"] },
+    "legal": { "title": "法律", "links": ["隐私政策", "服务条款", "Cookie政策"] },
+    "tagline": "用❤️为全球出口商打造",
+    "copyright": "© 2025 ExportFlow. 保留所有权利。"
+  },
+  "auth": {
+    "signup": {
+      "title": "开始免费试用",
+      "subtitle": "14天免费，无需信用卡。",
+      "fields": { "company": "公司名称", "name": "您的姓名", "email": "工作邮箱", "password": "密码" },
+      "submit": "创建账户",
+      "login_link": "已有账户？登录",
+      "benefits": ["14天免费试用", "专人引导配置", "随时取消", "30天退款保证"]
+    },
+    "login": {
+      "title": "欢迎回来",
+      "subtitle": "登录您的ExportFlow账户",
+      "fields": { "email": "邮箱", "password": "密码" },
+      "submit": "登录",
+      "forgot": "忘记密码？",
+      "signup_link": "没有账户？免费试用"
+    }
+  },
+  "about": {
+    "title": "出口商打造，为出口商服务",
+    "story": "ExportFlow诞生于挫折。多年来通过零散的Excel文件和无尽的邮件来管理数千笔订单后，我们的创始人知道一定有更好的方法。深夜核对订单、客户询问'收到我的订单了吗？'、一份一份手动制作文件... ExportFlow就是我们希望存在的工具。",
+    "short_story": "由一位厌倦了Excel混乱和邮件泛滥的出口商打造。",
+    "location": "总部位于法国，服务全球出口商。",
+    "mission": "我们的使命：帮助出口企业展现专业形象、节省时间、专注增长。"
+  }
+}
+
