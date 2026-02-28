@@ -1,0 +1,267 @@
+@import "tailwindcss";
+
+/* Dynamic branding variables - set by BrandingContext */
+:root {
+  --color-primary: #0071e3;
+  --color-primary-hover: #0077ed;
+  --color-primary-light: rgba(0, 113, 227, 0.1);
+  
+  --color-secondary: #34c759;
+  --color-secondary-hover: #2db350;
+  --color-secondary-light: rgba(52, 199, 89, 0.1);
+  
+  --color-accent: #ff9500;
+  --color-accent-hover: #e68600;
+  --color-accent-light: rgba(255, 149, 0, 0.1);
+}
+
+/* Marketing theme scope (prevents dashboard tokens from leaking into marketing UI) */
+.marketing {
+  --color-background: #ffffff;
+  --color-background-alt: #f9fafb;
+  --color-surface: #f3f4f6;
+
+  --color-text: #1e293b;
+  --color-text-secondary: #64748b;
+
+  --color-border: #e2e8f0;
+
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+
+  --gradient-brand: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  --shadow-soft: 0 18px 60px -24px rgba(0, 0, 0, 0.35);
+}
+
+html.dark .marketing {
+  --color-background: #0a0a10;
+  --color-background-alt: #0f0f18;
+  --color-surface: #12121c;
+
+  --color-text: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+
+  --color-border: #242434;
+}
+
+@theme {
+  /* Background colors */
+  --color-bg-primary: #f5f5f7;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #f5f5f7;
+
+  /* Marketing tokens (Tailwind v4 design tokens) */
+  --color-background: #f5f5f7;
+  --color-background-alt: #ffffff;
+  --color-surface: #f0f0f2;
+  
+  /* Text colors */
+  --color-text-primary: #1d1d1f;
+  --color-text-secondary: #86868b;
+  --color-text-tertiary: #d2d2d7;
+
+  --color-text: #1d1d1f;
+  
+  /* Brand colors */
+  --color-brand-primary: #0071e3;
+  --color-brand-hover: #0077ed;
+
+  --color-primary: #0071e3;
+  --color-primary-hover: #0077ed;
+  
+  /* Border colors */
+  --color-border-primary: #d2d2d7;
+  --color-border-hover: #0071e3;
+
+  --color-border: #d2d2d7;
+  
+  /* Status colors */
+  --color-success: #34c759;
+  --color-warning: #ff9500;
+  --color-error: #ff3b30;
+  --color-info: #5856d6;
+
+  /* Marketing */
+  --gradient-brand: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  --shadow-soft: 0 18px 60px -24px rgba(0, 0, 0, 0.35);
+  
+  /* UI Elements */
+  --color-logo-bg: #1d1d1f;
+  --color-avatar-bg: #0071e3;
+}
+
+/* Dark mode colors - applied to html element */
+html.dark {
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #1c1c1e;
+  --color-bg-tertiary: #2c2c2e;
+
+  --color-background: #000000;
+  --color-background-alt: #1c1c1e;
+  --color-surface: #2c2c2e;
+  
+  --color-text-primary: #f5f5f7;
+  --color-text-secondary: #98989d;
+  --color-text-tertiary: #48484a;
+
+  --color-text: #f5f5f7;
+  
+  --color-border-primary: #38383a;
+  --color-border-hover: #0a84ff;
+
+  --color-border: #38383a;
+  
+  --color-brand-primary: #0a84ff;
+  --color-brand-hover: #409cff;
+
+  --color-primary: #0a84ff;
+  --color-primary-hover: #409cff;
+  
+  --color-logo-bg: #2c2c2e;
+  
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+/* Reusable button styles */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--color-brand-primary);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0 1rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-brand-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-primary);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 0 1rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-bg-tertiary);
+}
+
+/* Reusable input styles */
+.input-field {
+  width: 100%;
+  height: 2.75rem;
+  padding: 0 1rem;
+  background-color: var(--color-bg-tertiary);
+  border-radius: 0.75rem;
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+
+.input-field.has-icon {
+  padding-left: 2.75rem !important;
+}
+
+.input-field::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.input-field:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-brand-primary);
+}
+
+/* Reusable card styles */
+.card {
+  background-color: var(--color-bg-secondary);
+  border-radius: 1rem;
+  border: 1px solid rgba(210, 210, 215, 0.3);
+}
+
+.card-hover {
+  background-color: var(--color-bg-secondary);
+  border-radius: 1rem;
+  border: 1px solid rgba(210, 210, 215, 0.3);
+  transition: all 0.3s;
+}
+
+.card-hover:hover {
+  border-color: rgba(0, 113, 227, 0.4);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Admin Layout - Sidebar offset */
+.admin-main-content {
+  min-height: 100vh;
+  padding-left: 0;
+  padding-top: 56px; /* Mobile header height */
+}
+
+@media (min-width: 1024px) {
+  .admin-main-content {
+    padding-left: 256px; /* Sidebar width */
+    padding-top: 0;
+  }
+}
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Clerk OTP code input fix - prevent digit overlap */
+.cl-otpCodeFieldInputs {
+  display: flex !important;
+  gap: 0.75rem !important;
+  justify-content: center !important;
+}
+
+.cl-otpCodeFieldInput {
+  width: 2.75rem !important;
+  height: 3rem !important;
+  text-align: center !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  border-radius: 0.5rem !important;
+  flex-shrink: 0 !important;
+}
+
+/* Clerk social buttons — hidden globally */
+.cl-socialButtons,
+.cl-socialButtonsBlockButton,
+.cl-socialButtonsProviderIcon,
+.cl-dividerRow,
+.cl-dividerLine,
+.cl-dividerText {
+  display: none !important;
+}

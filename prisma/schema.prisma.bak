@@ -1,0 +1,328 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
+
+// ============== ENUMS ==============
+
+enum UserRole {
+  ADMIN
+  COMMERCIAL
+  WAREHOUSE
+  DISTRIBUTOR
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  LOADING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PriceType {
+  DISTRIBUTOR
+  DIRECT
+}
+
+// ============== COMPANY (Multi-tenant) ==============
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  logo      String?
+  currency  String   @default("EUR")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Settings
+  lateModificationDays    Int     @default(30)
+  lateModificationFeeType String  @default("fixed") // fixed or percentage
+  lateModificationFee     Decimal @default(50)
+
+  // Relations
+  users      User[]
+  products   Product[]
+  categories Category[]
+  customers  Customer[]
+  orders     Order[]
+
+  @@map("companies")
+}
+
+// ============== USER ==============
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      UserRole @default(DISTRIBUTOR)
+  language  String   @default("en") // en, cn, fr, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  companyId  String
+  company    Company   @relation(fields: [companyId], references: [id])
+  customerId String?   @unique
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  // Auth
+  otpCode      String?
+  otpExpiresAt DateTime?
+
+  // Activity
+  orderChanges OrderHistory[]
+
+  @@map("users")
+}
+
+// ============== CATEGORY ==============
+
+model Category {
+  id        String   @id @default(cuid())
+  nameEn    String
+  nameCn    String?
+  parentId  String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  companyId String
+  company   Company    @relation(fields: [companyId], references: [id])
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryHierarchy")
+  products  Product[]
+
+  @@map("categories")
+}
+
+// ============== PRODUCT ==============
+
+model Product {
+  id          String   @id @default(cuid())
+  ref         String   // Product reference (e.g., SW-1234)
+  nameEn      String
+  nameCn      String?
+  nameCnAuto  String?  // Auto-translated
+  nameCnManual String? // Manual override
+  description String?
+  material    String?
+  hsCode      String?
+  photoUrl    String?
+  weightKg    Decimal?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Pricing
+  priceRmb         Decimal?
+  priceDistributor Decimal?
+  priceDirect      Decimal?
+  rrp              Decimal?
+
+  // Suggested quantities
+  optimumQty1 Int?
+  optimumQty2 Int?
+  optimumQty3 Int?
+
+  // Custom fields stored as JSON
+  customFields Json?
+
+  // Relations
+  companyId  String
+  company    Company      @relation(fields: [companyId], references: [id])
+  categoryId String?
+  category   Category?    @relation(fields: [categoryId], references: [id])
+  orderLines OrderLine[]
+
+  @@unique([companyId, ref])
+  @@map("products")
+}
+
+// ============== CUSTOMER (Distributor) ==============
+
+model Customer {
+  id              String    @id @default(cuid())
+  companyName     String
+  country         String?
+  currency        String    @default("EUR")
+  priceType       PriceType @default(DISTRIBUTOR)
+  contactName     String?
+  email           String
+  phone           String?
+  shippingAddress String?
+  billingAddress  String?
+  vatNumber       String?
+  paymentTerms    String?   @default("Net 30")
+  language        String    @default("en")
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Custom fields
+  customFields Json?
+
+  // Relations
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id])
+  user      User?
+  orders    Order[]
+
+  @@map("customers")
+}
+
+// ============== ORDER ==============
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      // Auto-generated: ORD-2026-0001
+  status          OrderStatus @default(DRAFT)
+  version         Int         @default(1)
+  shippingAddress String?
+  notesEn         String?
+  notesCn         String?
+  notesCnAuto     String?
+  
+  // Dates
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  submittedAt         DateTime?
+  confirmedAt         DateTime?
+  shippedAt           DateTime?
+  modificationDeadline DateTime?
+  loadingDate         DateTime?
+
+  // Totals
+  subtotal     Decimal @default(0)
+  totalCharges Decimal @default(0)
+  totalAmount  Decimal @default(0)
+  currency     String  @default("EUR")
+
+  // Invoice fields
+  incoterm     String?
+  exchangeRate Decimal?
+
+  // Custom fields
+  customFields Json?
+
+  // Relations
+  companyId  String
+  company    Company        @relation(fields: [companyId], references: [id])
+  customerId String
+  customer   Customer       @relation(fields: [customerId], references: [id])
+  lines      OrderLine[]
+  history    OrderHistory[]
+  charges    OrderCharge[]
+  invoices   Invoice[]
+
+  @@unique([companyId, orderNumber])
+  @@map("orders")
+}
+
+// ============== ORDER LINE ==============
+
+model OrderLine {
+  id        String   @id @default(cuid())
+  quantity  Int
+  unitPrice Decimal
+  lineTotal Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("order_lines")
+}
+
+// ============== ORDER CHARGE (Additional fees) ==============
+
+model OrderCharge {
+  id          String   @id @default(cuid())
+  description String   // "Loading costs", "Late modification fee"
+  amount      Decimal
+  isAutomatic Boolean  @default(false) // Auto-added by system
+  createdAt   DateTime @default(now())
+
+  // Relations
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_charges")
+}
+
+// ============== ORDER HISTORY (Audit Trail) ==============
+
+model OrderHistory {
+  id         String   @id @default(cuid())
+  version    Int
+  changeType String   // created, line_added, line_removed, qty_changed, status_changed
+  field      String?  // Which field changed
+  oldValue   String?
+  newValue   String?
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  orderId   String
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  changedBy String
+  user      User   @relation(fields: [changedBy], references: [id])
+
+  @@map("order_history")
+}
+
+// ============== INVOICE ==============
+
+model Invoice {
+  id            String   @id @default(cuid())
+  invoiceNumber String
+  issueDate     DateTime @default(now())
+  dueDate       DateTime?
+  status        String   @default("draft") // draft, sent, paid
+  pdfUrl        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Amounts
+  subtotal    Decimal
+  totalAmount Decimal
+  currency    String
+
+  // Relations
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  @@map("invoices")
+}
+
+// ============== TRANSLATION GLOSSARY ==============
+
+model TranslationGlossary {
+  id        String   @id @default(cuid())
+  termEn    String
+  termCn    String
+  context   String?  // Optional context hint
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companyId String
+
+  @@unique([companyId, termEn])
+  @@map("translation_glossary")
+}

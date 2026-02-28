@@ -1,0 +1,446 @@
+# ExportFlow - Cursor Rules
+# Last Updated: January 30, 2026 - v4 (Renamed + Multi-Tenant)
+
+## =====================================================
+## PROJECT OVERVIEW
+## =====================================================
+
+**ExportFlow** (anciennement OrderBridge) est une plateforme B2B SaaS multi-tenant pour:
+1. Les marques occidentales qui sourcent en Chine
+2. Les exportateurs chinois (OEM/ODM) qui vendent à l'international
+
+**URLs:**
+- Site marketing: `exportflow.io`
+- App: `app.exportflow.io`
+- Portails clients: `[slug].exportflow.io` (auto-généré)
+- Domaines custom: `orders.clientsite.com` (premium)
+
+**Différenciateurs clés:**
+- Architecture multi-tenant avec sous-domaines automatiques
+- Branding personnalisable par client (logo, couleurs, favicon)
+- Traduction automatique EN↔CN
+- Workflow substitution/rupture avec approbation client
+- Suivi paiements T/T (acompte/solde)
+- Import Excel super-tolérant (fuzzy SKU matching)
+- Interface warehouse chinoise (sans prix)
+- Gestion des surcharges modifications tardives
+
+## =====================================================
+## ARCHITECTURE MULTI-TENANT
+## =====================================================
+
+### Comment ça marche
+
+```
+1. Client s'inscrit "Swift Boats"
+              ↓
+2. Système génère automatiquement:
+   → slug: "swiftboats"  
+   → URL: swiftboats.exportflow.io (actif immédiatement)
+              ↓
+3. Client personnalise son branding
+              ↓
+4. Option Premium: domaine custom (orders.swiftboats.com)
+```
+
+### Configuration DNS (Cloudflare)
+
+```
+Type    Name              Content
+A       exportflow.io     [IP serveur]
+A       app               [IP serveur]
+A       *                 [IP serveur]    ← Wildcard pour tous les tenants
+```
+
+### Middleware Next.js
+
+Le middleware intercepte toutes les requêtes et:
+1. Extrait le sous-domaine du hostname
+2. Vérifie si c'est un tenant (pas réservé)
+3. Injecte le `x-tenant-slug` dans les headers
+4. L'app charge les données du bon tenant
+
+### Sous-domaines réservés
+
+```typescript
+const RESERVED = ['app', 'www', 'api', 'admin', 'docs', 'help', 'status', 'blog', 'mail']
+```
+
+## =====================================================
+## DATA MODELS
+## =====================================================
+
+### Company (Tenant)
+
+```typescript
+interface Company {
+  id: string
+  name: string
+  slug: string                    // "swiftboats" → swiftboats.exportflow.io
+  
+  // Domaine custom (premium)
+  customDomain?: string           // "orders.swiftboats.com"
+  customDomainVerified: boolean
+  
+  // Subscription
+  plan: 'starter' | 'growth' | 'pro' | 'enterprise'
+  
+  // Relations
+  branding?: CompanyBranding
+  users: User[]
+  products: Product[]
+  customers: Customer[]
+  orders: Order[]
+  
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### CompanyBranding
+
+```typescript
+interface CompanyBranding {
+  id: string
+  companyId: string
+  
+  // Logos
+  logoUrl?: string              // Header logo
+  logoSmallUrl?: string         // Favicon / mobile
+  logoDarkUrl?: string          // Pour fonds sombres
+  invoiceLogoUrl?: string       // Sur les PDFs
+  
+  // Couleurs
+  primaryColor: string          // Default: #0071e3
+  primaryHoverColor: string     // Default: #0077ed
+  accentColor?: string
+  headerBgColor?: string
+  headerTextColor?: string
+  
+  // Contenu
+  companyName: string
+  tagline?: string
+  supportEmail?: string
+  supportPhone?: string
+  websiteUrl?: string
+  
+  // Footer
+  footerText?: string
+  showPoweredBy: boolean        // "Powered by ExportFlow"
+  
+  // Documents
+  invoiceFooter?: string
+  
+  // Avancé
+  customCss?: string
+}
+```
+
+### SubstitutionRequest
+
+```typescript
+interface SubstitutionRequest {
+  id: string
+  orderId: string
+  orderLineId: string
+  originalProductId: string
+  originalQuantity: number
+  reason: 'out_of_stock' | 'discontinued' | 'partial_stock' | 'quality_issue'
+  
+  proposals: SubstitutionProposal[]
+  
+  status: 'pending' | 'approved' | 'rejected' | 'expired'
+  
+  customerResponse?: {
+    decision: 'accept' | 'reject' | 'backorder'
+    selectedProposalId?: string
+    comment?: string
+    respondedAt: string
+  }
+  
+  createdAt: string
+  expiresAt: string   // Auto-reject après 72h
+}
+
+interface SubstitutionProposal {
+  id: string
+  type: 'substitute' | 'backorder'
+  productId?: string
+  quantity: number
+  priceAdjustment: number
+  availableDate?: string
+  note?: string
+}
+```
+
+### OrderPayment
+
+```typescript
+interface OrderPayment {
+  id: string
+  orderId: string
+  invoiceId?: string
+  
+  expectedAmount: number
+  currency: string
+  depositPercentage: number     // Default: 30
+  
+  payments: PaymentRecord[]
+  
+  status: 'awaiting_deposit' | 'deposit_received' | 'awaiting_balance' | 'fully_paid' | 'overpaid'
+  
+  bankDetails: {
+    bankName: string
+    accountName: string
+    accountNumber: string
+    swiftCode: string
+    reference: string
+  }
+}
+
+interface PaymentRecord {
+  id: string
+  type: 'deposit' | 'balance' | 'adjustment'
+  amount: number
+  currency: string
+  receivedDate: string
+  paymentMethod: 'tt' | 'lc' | 'paypal' | 'other'
+  reference: string
+  proofDocument?: string
+  verifiedBy?: string
+  verifiedAt?: string
+  notes?: string
+}
+```
+
+## =====================================================
+## TECH STACK
+## =====================================================
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16+ (App Router) |
+| Styling | Tailwind CSS + CSS Variables |
+| State | React Context (TenantContext, DistributorContext) |
+| Database | PostgreSQL via Supabase |
+| ORM | Prisma 5.x |
+| Auth | Custom passwordless OTP |
+| PDF | jsPDF |
+| DNS/CDN | Cloudflare |
+| Hosting | Vercel |
+| Language | TypeScript (strict) |
+
+## =====================================================
+## FILE STRUCTURE
+## =====================================================
+
+```
+src/
+├── app/
+│   ├── (marketing)/              # Site exportflow.io
+│   │   ├── page.tsx              # Homepage
+│   │   ├── features/page.tsx
+│   │   ├── pricing/page.tsx
+│   │   └── contact/page.tsx
+│   │
+│   ├── (auth)/
+│   │   ├── login/page.tsx
+│   │   ├── signup/page.tsx       # Crée le tenant + sous-domaine
+│   │   └── verify/page.tsx
+│   │
+│   ├── (tenant)/                 # App multi-tenant [slug].exportflow.io
+│   │   ├── layout.tsx            # Charge le tenant, applique branding
+│   │   │
+│   │   ├── (distributor)/        # Portail distributeur
+│   │   │   ├── catalog/
+│   │   │   ├── cart/
+│   │   │   ├── checkout/
+│   │   │   ├── my-orders/
+│   │   │   ├── my-quotes/
+│   │   │   ├── approvals/        # Approbation substitutions
+│   │   │   └── account/
+│   │   │
+│   │   ├── (dashboard)/          # Admin du tenant
+│   │   │   ├── dashboard/
+│   │   │   ├── products/
+│   │   │   │   └── import/       # Import Excel
+│   │   │   ├── customers/
+│   │   │   ├── orders/
+│   │   │   ├── invoices/
+│   │   │   ├── payments/         # Suivi paiements
+│   │   │   └── settings/
+│   │   │       ├── company/
+│   │   │       ├── branding/     # Logo, couleurs
+│   │   │       ├── domain/       # Domaine custom
+│   │   │       └── billing/      # Abonnement ExportFlow
+│   │   │
+│   │   └── (warehouse)/          # Interface warehouse CN
+│   │       └── orders/
+│   │
+│   └── api/
+│       ├── tenant/route.ts       # Résolution tenant
+│       ├── signup/route.ts       # Création tenant
+│       ├── branding/route.ts
+│       └── ...
+│
+├── middleware.ts                  # Détection sous-domaine
+│
+├── contexts/
+│   ├── TenantContext.tsx         # Tenant actuel + branding
+│   └── DistributorContext.tsx
+│
+├── hooks/
+│   ├── useTenant.ts
+│   └── usePreferences.ts
+│
+├── lib/
+│   ├── prisma.ts
+│   ├── generatePdf.ts
+│   ├── excelImport.ts
+│   ├── fuzzyMatch.ts
+│   └── verifyDomain.ts
+│
+└── components/
+    ├── TenantLogo.tsx            # Affiche le logo du tenant
+    ├── PoweredByBadge.tsx        # "Powered by ExportFlow"
+    └── ...
+```
+
+## =====================================================
+## DESIGN SYSTEM
+## =====================================================
+
+### CSS Variables (overridées par le branding du tenant)
+
+```css
+:root {
+  /* Backgrounds */
+  --color-bg-primary: #f5f5f7;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #f0f0f2;
+  
+  /* Text */
+  --color-text-primary: #1d1d1f;
+  --color-text-secondary: #86868b;
+  --color-text-tertiary: #aeaeb2;
+  
+  /* Brand - CUSTOMIZABLE PER TENANT */
+  --color-brand-primary: #0071e3;
+  --color-brand-hover: #0077ed;
+  
+  /* Status */
+  --color-success: #34c759;
+  --color-warning: #ff9500;
+  --color-error: #ff3b30;
+  
+  /* Borders */
+  --color-border: rgba(210, 210, 215, 0.3);
+}
+```
+
+### Application du Branding
+
+Le `TenantContext` charge le branding et l'applique:
+
+```typescript
+useEffect(() => {
+  if (tenant?.branding) {
+    const root = document.documentElement
+    root.style.setProperty('--color-brand-primary', tenant.branding.primaryColor)
+    root.style.setProperty('--color-brand-hover', tenant.branding.primaryHoverColor)
+    
+    // Favicon
+    if (tenant.branding.logoSmallUrl) {
+      updateFavicon(tenant.branding.logoSmallUrl)
+    }
+    
+    // Title
+    document.title = `${tenant.branding.companyName} - Orders`
+  }
+}, [tenant])
+```
+
+## =====================================================
+## USER ROLES
+## =====================================================
+
+| Role | Scope | Language | Sees Prices | Key Actions |
+|------|-------|----------|-------------|-------------|
+| SUPERADMIN | ExportFlow | EN | All | Manage all tenants |
+| ADMIN | Tenant | EN+CN | Yes | Full tenant access + branding |
+| COMMERCIAL | Tenant | EN+CN | Yes | Orders, invoices, customers |
+| WAREHOUSE | Tenant | CN only | NO | Pick/pack, no prices |
+| FINANCE | Tenant | EN+CN | Yes | Invoices, payments |
+| DISTRIBUTOR | Customer | EN | Own prices | Browse, order, approve |
+
+## =====================================================
+## BUSINESS RULES
+## =====================================================
+
+### Subscription Plans (ExportFlow)
+
+| Plan | Prix | Limites |
+|------|------|---------|
+| Starter | $499/mois | 500 commandes/mois, 1 user admin |
+| Growth | $999/mois | 2000 commandes/mois, 5 users |
+| Pro | $1999/mois | Illimité, domaine custom, API |
+| Enterprise | Sur devis | Multi-entités, SLA, support dédié |
+
+### Order Modification Surcharges
+
+| Jours avant loading | Surcharge |
+|---------------------|-----------|
+| > 30 jours | $0 (gratuit) |
+| 15-30 jours | $0 (warning) |
+| 7-14 jours | $50 ou 2% |
+| < 7 jours | $100 ou 5% |
+| Après loading | Bloqué |
+
+### Substitution Rules
+
+- Expiration: 72 heures par défaut
+- Auto-reject si pas de réponse = article retiré
+- Différence de prix: si substitut moins cher → crédit client
+
+### Payment Terms (typical B2B export)
+
+- 30% T/T acompte, 70% avant expédition
+- 100% T/T avant expédition (nouveaux clients)
+- Net 30/60/90 (clients établis avec crédit)
+
+## =====================================================
+## CODING RULES
+## =====================================================
+
+1. **Multi-tenant obligatoire**: Toujours filtrer par `companyId`
+2. **CSS Variables**: Toujours utiliser les variables (permet le branding)
+3. **Warehouse = NO PRICES**: Vérifier le rôle avant d'afficher les prix
+4. **Soft deletes**: `isActive: false`, jamais DELETE
+5. **Audit trail**: Logger tous les changements commandes/paiements
+6. **Fichiers complets**: Toujours fournir le fichier ENTIER
+7. **TypeScript strict**: Typer tout
+8. **Pas de libs UI externes**: Composants custom + Tailwind
+
+## =====================================================
+## FEATURES TO IMPLEMENT
+## =====================================================
+
+### 🔴 Critique
+1. **Multi-tenant + Sous-domaines auto** - Middleware, TenantContext
+2. **Import Excel super-tolérant** - Fuzzy matching, variantes
+3. **Workflow Substitution** - Admin propose, client approuve
+4. **Suivi Paiements T/T** - Acompte/solde
+
+### 🟠 Haute
+5. **Branding personnalisable** - Logo, couleurs, favicon
+6. **Domaine custom** - CNAME + vérification
+7. **Modification commande + Diff** - Rouge/vert/jaune
+
+### 🟡 Moyenne
+8. **Site marketing** - Features, pricing, signup
+9. **Plans & Billing** - Stripe integration (futur)
+10. **Interface Warehouse CN** - Sans prix
+
+### 🟢 Basse
+11. **API publique** - Pour intégrations
+12. **Documentation** - docs.exportflow.io

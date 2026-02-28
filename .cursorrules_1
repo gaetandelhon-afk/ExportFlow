@@ -1,0 +1,559 @@
+# OrderBridge - Cursor Rules
+# Complete project context for AI-assisted development
+# Last Updated: January 30, 2026 - v2 (Updated with China Export B2B requirements)
+
+## =====================================================
+## PROJECT OVERVIEW
+## =====================================================
+
+OrderBridge is a B2B ordering portal for Western brands sourcing from China, 
+AND for Chinese exporters selling to international buyers.
+
+**Key differentiators:**
+- Automatic EN↔CN translation
+- Visual product catalog with mandatory photos
+- Order modification tracking with diff view
+- Separate Chinese warehouse interface (no prices)
+- Late order surcharge management
+- **Substitution/Backorder workflow with approval**
+- **Payment tracking (T/T acompte/solde)**
+- **Super-tolerant Excel import**
+- **Multi-channel notifications (Email → WeCom/DingTalk future)**
+
+**Target Markets:**
+1. Western SMBs sourcing from China (Swift Boats = first customer)
+2. Chinese exporters (OEM/ODM) selling to international distributors
+
+**ICP (Ideal Customer Profile):**
+- 30-300 employees
+- $5M-80M export revenue/year
+- 300-20,000 SKUs
+- 20-500 active customer accounts
+- 50-2,000 orders/month
+- Pain: Excel chaos, pricing errors, substitution back-and-forth, payment tracking
+
+**Business Model:**
+- Starter: $499/month
+- Growth: $999/month
+- Pro: $1,999+/month
+- Target ROI for customer: $1,000-2,850/month saved (10x return)
+
+## =====================================================
+## TECH STACK
+## =====================================================
+
+| Layer | Technology | Notes |
+|-------|------------|-------|
+| Framework | Next.js 16+ (App Router) | Using Turbopack |
+| Styling | Tailwind CSS + CSS Variables | Apple-style design |
+| Components | Custom (no shadcn currently) | Minimal, clean |
+| State | React Context | DistributorContext for client state |
+| Database | PostgreSQL via Supabase | Multi-tenant |
+| ORM | Prisma 5.x | NOT v7 (unstable) |
+| Auth | Custom passwordless OTP | 6-digit email codes |
+| PDF | jsPDF | Quotes, invoices, packing lists |
+| Language | TypeScript (strict) | |
+| Notifications | Email (Phase 1) → WeCom/DingTalk (Phase 2) | Multi-channel architecture |
+
+## =====================================================
+## DESIGN SYSTEM (Apple-Style)
+## =====================================================
+
+### CSS Variables (defined in globals.css)
+```css
+:root {
+  /* Backgrounds */
+  --color-bg-primary: #f5f5f7;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #f0f0f2;
+  
+  /* Text */
+  --color-text-primary: #1d1d1f;
+  --color-text-secondary: #86868b;
+  --color-text-tertiary: #aeaeb2;
+  
+  /* Brand */
+  --color-brand-primary: #0071e3;
+  --color-brand-hover: #0077ed;
+  
+  /* Status */
+  --color-success: #34c759;
+  --color-warning: #ff9500;
+  --color-error: #ff3b30;
+  
+  /* Borders */
+  --color-border: rgba(210, 210, 215, 0.3);
+}
+```
+
+### Typography
+- Font: -apple-system, BlinkMacSystemFont, 'SF Pro', system-ui
+- H1: 28-32px, semibold (600)
+- H2: 20-24px, semibold (600)
+- Body: 14-15px, regular (400)
+- Label: 12-13px, medium (500)
+- Small: 11-12px, regular (400)
+
+### Component Patterns
+- Buttons: `btn-primary`, `btn-secondary` classes
+- Cards: `card` class (white bg, rounded-2xl, subtle border)
+- Inputs: `input-field` class (light bg, rounded-xl, focus ring)
+- Spacing: Generous padding (p-6 for cards, p-8 for sections)
+
+### Design Rules - DO
+- Use whitespace generously
+- Keep interfaces uncluttered
+- Use subtle hover states
+- Use CSS variables for colors
+- Maintain consistent alignment
+
+### Design Rules - DON'T
+- Use bullet points in UI
+- Use emojis in interface
+- Use dark backgrounds
+- Use gradients
+- Overcrowd the screen
+- Use excessive bold text
+
+## =====================================================
+## FILE STRUCTURE
+## =====================================================
+
+```
+src/
+├── app/
+│   ├── globals.css              # CSS variables, base styles
+│   ├── layout.tsx               # Root layout
+│   ├── page.tsx                 # Landing/redirect
+│   │
+│   ├── (auth)/
+│   │   └── login/page.tsx       # Passwordless login
+│   │
+│   ├── (distributor)/           # DISTRIBUTOR/BUYER PORTAL
+│   │   ├── catalog/page.tsx     # Product catalog
+│   │   ├── cart/page.tsx        # Shopping cart
+│   │   ├── checkout/page.tsx    # Checkout flow
+│   │   ├── my-quotes/page.tsx   # Quotes list
+│   │   ├── my-orders/
+│   │   │   ├── page.tsx         # Orders list
+│   │   │   ├── [id]/page.tsx    # Order detail
+│   │   │   └── [id]/modify/     # Order modification (TODO)
+│   │   ├── approvals/           # Substitution approvals (TODO)
+│   │   └── account/
+│   │
+│   ├── (dashboard)/             # ADMIN/SELLER PORTAL
+│   │   ├── dashboard/page.tsx   # Admin dashboard
+│   │   ├── products/            # Product management
+│   │   │   ├── page.tsx         # Products list
+│   │   │   ├── new/             # Create product
+│   │   │   ├── [id]/            # Edit product
+│   │   │   └── import/          # Excel import wizard
+│   │   ├── customers/           # Customer management
+│   │   ├── orders/              # Order management
+│   │   │   ├── page.tsx         # All orders
+│   │   │   ├── [id]/            # Order detail
+│   │   │   └── [id]/substitute/ # Substitution workflow
+│   │   ├── invoices/            # Invoice management
+│   │   ├── payments/            # Payment tracking (NEW)
+│   │   └── settings/            # Company settings
+│   │
+│   ├── (warehouse)/             # WAREHOUSE PORTAL (Chinese)
+│   │   └── orders/page.tsx      # Chinese interface, no prices
+│   │
+│   └── api/
+│
+├── components/
+│   ├── DistributorNavigation.tsx
+│   ├── AdminNavigation.tsx      # (TODO)
+│   ├── ProductCard.tsx
+│   ├── OrderDiffView.tsx        # (TODO)
+│   ├── SubstitutionModal.tsx    # (TODO)
+│   ├── PaymentStatusBadge.tsx   # (TODO)
+│   └── ...
+│
+├── contexts/
+│   ├── DistributorContext.tsx   # Buyer state management
+│   └── AdminContext.tsx         # Admin state management (TODO)
+│
+├── services/
+│   └── notifications/           # Multi-channel notifications (TODO)
+│       ├── index.ts             # Abstract interface
+│       ├── email.ts             # Email implementation
+│       └── wecom.ts             # WeCom placeholder
+│
+├── config/
+│   └── features.ts              # Feature flags, company config
+│
+├── data/
+│   └── products.ts              # Mock product data
+│
+├── hooks/
+│   └── usePreferences.ts        # Currency preferences hook
+│
+└── lib/
+    ├── generatePdf.ts           # PDF generation
+    ├── excelImport.ts           # Excel import logic (TODO)
+    └── validation.ts            # SKU/MOQ validation (TODO)
+```
+
+## =====================================================
+## USER ROLES
+## =====================================================
+
+| Role | Language | Sees Prices | Key Actions |
+|------|----------|-------------|-------------|
+| ADMIN | EN+CN | Yes | Everything |
+| COMMERCIAL | EN+CN | Yes | Orders, invoices, customers, substitutions |
+| WAREHOUSE | CN only | NO | Pick/pack, update status |
+| FINANCE | EN+CN | Yes | Invoices, payments, reports |
+| DISTRIBUTOR | EN | Own prices | Browse, order, approve substitutions |
+
+## =====================================================
+## NEW FEATURES - BUSINESS REQUIREMENTS
+## =====================================================
+
+### 1. Substitution/Backorder Workflow (CRITICAL)
+
+When a product is unavailable or insufficient stock:
+
+**Admin Flow:**
+1. Admin marks item as "unavailable" or "partial"
+2. Admin proposes substitute product(s) OR backorder date
+3. System notifies customer (email → future: WeCom)
+4. Customer receives notification with approval link
+
+**Customer Flow:**
+1. Customer sees pending approval in portal + email
+2. Options: Accept substitute / Reject (remove item) / Wait for backorder
+3. Customer approves or rejects
+4. Order automatically updated
+5. Admin notified of decision
+
+**Data Model:**
+```typescript
+interface SubstitutionRequest {
+  id: string
+  orderId: string
+  orderLineId: string
+  originalProductId: string
+  originalQuantity: number
+  reason: 'out_of_stock' | 'discontinued' | 'partial_stock' | 'quality_issue'
+  
+  // Proposed alternatives
+  proposals: SubstitutionProposal[]
+  
+  status: 'pending' | 'approved' | 'rejected' | 'expired'
+  customerResponse?: {
+    decision: 'accept' | 'reject' | 'backorder'
+    selectedProposalId?: string
+    comment?: string
+    respondedAt: string
+  }
+  
+  createdAt: string
+  expiresAt: string // Auto-reject after X days
+}
+
+interface SubstitutionProposal {
+  id: string
+  type: 'substitute' | 'backorder'
+  productId?: string        // For substitute
+  quantity: number
+  priceAdjustment: number   // +/- from original
+  availableDate?: string    // For backorder
+  note?: string
+}
+```
+
+### 2. Payment Tracking (T/T) (CRITICAL)
+
+B2B export typically uses T/T (Telegraphic Transfer):
+- 30% deposit before production
+- 70% balance before shipment
+
+**Payment Statuses:**
+- `awaiting_deposit` - Waiting for 30% deposit
+- `deposit_received` - Deposit confirmed, production can start
+- `awaiting_balance` - Production done, waiting for 70%
+- `fully_paid` - All payments received
+- `overpaid` - More than expected (needs refund/credit)
+
+**Data Model:**
+```typescript
+interface OrderPayment {
+  id: string
+  orderId: string
+  invoiceId?: string
+  
+  expectedAmount: number
+  currency: string
+  
+  payments: PaymentRecord[]
+  
+  status: 'awaiting_deposit' | 'deposit_received' | 'awaiting_balance' | 'fully_paid' | 'overpaid'
+  depositPercentage: number  // Usually 30
+  
+  bankDetails: {
+    bankName: string
+    accountName: string
+    accountNumber: string
+    swiftCode: string
+    reference: string  // Order number or invoice number
+  }
+}
+
+interface PaymentRecord {
+  id: string
+  type: 'deposit' | 'balance' | 'adjustment'
+  amount: number
+  currency: string
+  receivedDate: string
+  paymentMethod: 'tt' | 'lc' | 'paypal' | 'other'
+  reference: string           // Bank reference
+  proofDocument?: string      // URL to uploaded proof
+  verifiedBy?: string
+  verifiedAt?: string
+  notes?: string
+}
+```
+
+### 3. Super-Tolerant Excel Import (CRITICAL)
+
+Excel imports must handle real-world messy files:
+
+**Tolerance Features:**
+- **Fuzzy SKU matching**: "TB-030" matches "TB030" or "TB 030"
+- **Unit normalization**: "pcs", "PCS", "pieces", "ea", "units" → "pcs"
+- **Number cleaning**: "1,234.56" or "1.234,56" or "1234.56"
+- **Empty row handling**: Skip blank rows intelligently
+- **Header detection**: Find header row even if not row 1
+- **Multi-currency**: Detect EUR/USD/RMB from column headers
+- **Incoterm validation**: FOB, CIF, EXW, DDP, etc.
+- **MOQ warnings**: Flag orders below MOQ (don't block)
+
+**Error Handling:**
+```typescript
+interface ImportValidation {
+  row: number
+  severity: 'error' | 'warning' | 'info'
+  field: string
+  message: string
+  originalValue: any
+  suggestedValue?: any
+  autoFixed: boolean
+}
+
+// Examples:
+{ row: 15, severity: 'warning', field: 'sku', message: 'SKU not found, did you mean "TB-030"?', originalValue: 'TB030', suggestedValue: 'TB-030', autoFixed: false }
+{ row: 23, severity: 'info', field: 'quantity', message: 'Below MOQ (10), order will proceed with warning', originalValue: 5, autoFixed: false }
+{ row: 45, severity: 'error', field: 'price', message: 'Invalid price format', originalValue: 'TBD', autoFixed: false }
+```
+
+### 4. Multi-Channel Notification Architecture
+
+**Abstract Interface:**
+```typescript
+interface NotificationService {
+  send(notification: Notification): Promise<boolean>
+  getChannels(): NotificationChannel[]
+}
+
+interface Notification {
+  type: 'order_confirmed' | 'substitution_request' | 'payment_received' | 'shipment_update' | ...
+  recipientId: string
+  recipientType: 'customer' | 'admin' | 'warehouse'
+  channels: ('email' | 'wecom' | 'dingtalk' | 'sms')[]
+  priority: 'high' | 'normal' | 'low'
+  data: Record<string, any>
+  actionUrl?: string
+}
+```
+
+**Phase 1 (MVP):** Email only
+**Phase 2:** Add WeCom for Chinese users
+**Phase 3:** Add DingTalk for internal teams
+
+### 5. Enhanced Commercial Invoice
+
+Required fields for China export:
+- Invoice number
+- Date
+- Buyer/Seller details
+- **Incoterm** (FOB, CIF, EXW, DDP, etc.)
+- **Port of loading / destination**
+- **HS Codes** per item
+- **Country of origin**
+- Item descriptions (English + Chinese)
+- Quantities with **units and carton counts**
+- **Carton dimensions and weights**
+- Net weight / Gross weight
+- Total value
+- **Bank details with SWIFT**
+- **Payment terms**
+
+## =====================================================
+## PRICING SYSTEM
+## =====================================================
+
+### Multi-Level Pricing (per customer)
+
+```typescript
+interface CustomerPricing {
+  customerId: string
+  
+  // Pricing model
+  priceType: 'standard' | 'discount_tier' | 'custom'
+  
+  // For discount_tier
+  discountTiers?: {
+    minQuantity: number
+    discountPercent: number
+  }[]
+  
+  // For custom (override per product)
+  customPrices?: {
+    productId: string
+    price: number
+    currency: string
+  }[]
+  
+  // Global discount on top
+  globalDiscount?: number  // 0.05 = 5%
+  
+  // MOQ rules
+  moqOverrides?: {
+    productId: string
+    moq: number
+  }[]
+  
+  // Payment terms
+  paymentTerms: string  // "30% deposit, 70% before shipment"
+  creditLimit?: number
+}
+```
+
+### Currency Handling
+
+- **Catalog**: RMB (internal cost)
+- **Display**: Customer's preferred currency (EUR, USD, GBP, etc.)
+- **Invoice**: Customer's invoice currency
+- **Exchange rates**: Configurable per company, manual or API
+
+## =====================================================
+## ORDER WORKFLOW
+## =====================================================
+
+```
+                    ┌─────────────────────────────────────┐
+                    │                                     │
+                    ▼                                     │
+DRAFT → PENDING → CONFIRMED → PREPARING → READY → LOADING → SHIPPED → DELIVERED
+                    │              │
+                    │              ▼
+                    │     SUBSTITUTION_PENDING ──┐
+                    │              │             │
+                    │              ▼             │
+                    │     (Customer approves) ───┘
+                    │
+                    ▼
+               CANCELLED
+
+Payment Status (parallel track):
+AWAITING_DEPOSIT → DEPOSIT_RECEIVED → AWAITING_BALANCE → FULLY_PAID
+```
+
+## =====================================================
+## BUSINESS RULES
+## =====================================================
+
+### Order Modification Surcharges
+| Days Before Loading | Surcharge |
+|---------------------|-----------|
+| > 30 days | $0 (free) |
+| 15-30 days | $0 (warning shown) |
+| 7-14 days | $50 or 2% of order |
+| < 7 days | $100 or 5% of order |
+| After loading | Modification blocked |
+
+### Payment Terms (typical)
+- 30% T/T deposit, 70% before shipment
+- 100% T/T before shipment (new customers)
+- Net 30/60/90 (established customers with credit)
+- L/C at sight (large orders)
+
+### Substitution Rules
+- Substitution request expires after 72 hours (configurable)
+- Auto-reject if no response = remove item from order
+- Customer can request backorder instead of substitute
+- Price difference: if substitute is cheaper, customer gets credit
+
+## =====================================================
+## IMPORTANT CODING RULES
+## =====================================================
+
+1. **Always use CSS variables** for colors: `var(--color-text-primary)`
+2. **Multi-tenant**: Always filter by `companyId` in database queries
+3. **Warehouse users NEVER see prices**: Check role before showing prices
+4. **Soft deletes**: Set `isActive: false`, never DELETE
+5. **Log all changes**: Create audit record for orders, payments, substitutions
+6. **Complete files**: When editing, provide the COMPLETE file
+7. **TypeScript strict**: Always type everything properly
+8. **No external UI libraries**: Use custom components with Tailwind
+9. **Notification abstraction**: Use NotificationService, never send directly
+
+## =====================================================
+## DEVELOPMENT PHASES
+## =====================================================
+
+### Phase 1 - MVP (Current)
+- ✅ Distributor portal (catalog, cart, orders, quotes)
+- 🔄 Admin portal (dashboard, products, customers, orders)
+- 🔄 Excel import (super-tolerant)
+- 🔄 Payment tracking basic
+- 🔄 Substitution workflow
+- 🔄 Email notifications
+
+### Phase 2 - Scale
+- Multi-warehouse support
+- WeCom integration
+- Advanced pricing rules
+- ERP export (CSV/API)
+- Customer portal improvements
+
+### Phase 3 - Enterprise
+- DingTalk integration
+- Kingdee/Yonyou connectors
+- Data residency options (China hosting)
+- Multi-entity support
+- Advanced analytics
+
+## =====================================================
+## COMPLETION STATUS
+## =====================================================
+
+### ✅ DONE - Distributor Portal (~95%)
+- Catalog, cart, checkout
+- Quotes management
+- Orders list and detail
+- Addresses, preferences
+- PDF generation
+
+### 🔄 TODO - Distributor Portal
+- Order modification with diff view
+- Substitution approval page
+- Payment status visibility
+
+### 🔄 TODO - Admin Portal (0%)
+- Dashboard
+- Products CRUD + variants
+- Excel import wizard
+- Customer management + settings
+- Order management + substitutions
+- Invoice management
+- Payment tracking
+- Company settings
+
+### 🔄 TODO - Warehouse Portal (0%)
+- Chinese interface
+- No prices
+- Pick/pack workflow

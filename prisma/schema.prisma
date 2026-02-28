@@ -1,0 +1,1122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============== ENUMS ==============
+
+enum UserRole {
+  ADMIN
+  COMMERCIAL
+  WAREHOUSE
+  DISTRIBUTOR
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  LOADING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PriceType {
+  DISTRIBUTOR
+  DIRECT
+}
+
+// ============== COMPANY (Multi-tenant) ==============
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  currency  String   @default("EUR")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Multi-tenant
+  customDomain String? @unique
+  senderEmail  String?
+
+  // Subscription & Trial
+  trialStartedAt     DateTime?
+  trialEndsAt        DateTime?
+  subscriptionStatus String    @default("trialing")
+  accessUntil        DateTime?
+  isActive           Boolean   @default(true)
+  deletionScheduledAt DateTime?
+  trialEmailsSent    Json?
+
+  // Settings
+  lateModificationDays    Int     @default(30)
+  lateModificationFeeType String  @default("fixed")
+  lateModificationFee     Decimal @default(50)
+  trashRetentionDays      Int     @default(30)
+
+  // Relations
+  users              User[]
+  products           Product[]
+  categories         Category[]
+  customers          Customer[]
+  customerCategories CustomerCategory[]
+  orders             Order[]
+  branding           CompanyBranding?
+  priceTiers         PriceTier[]
+  pricingRules       PricingRule[]
+  documentTemplates  DocumentTemplate[]
+
+  @@map("companies")
+}
+
+// ============== PRICE TIER ==============
+
+enum PriceTierType {
+  PERCENTAGE  // Apply modifier % to base price
+  FIXED_PRICE // Use fixed prices defined per product
+}
+
+model PriceTier {
+  id          String        @id @default(cuid())
+  name        String        // "Distributor", "Wholesale", "Price A"
+  code        String        // "distributor", "wholesale", "price_a"
+  description String?
+  type        PriceTierType @default(FIXED_PRICE) // Type of pricing
+  modifier    Decimal       @default(0) // % modifier: +20 for markup, -20 for discount
+  baseTierCode String?      // Code of the tier to use as base price (only for PERCENTAGE type)
+  currency    String        @default("CNY") // Currency for this price tier (CNY, USD, EUR, etc.)
+  sortOrder   Int           @default(0)
+  isDefault   Boolean       @default(false)
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  companyId String
+  company   Company    @relation(fields: [companyId], references: [id])
+  customers Customer[]
+
+  @@unique([companyId, code])
+  @@map("price_tiers")
+}
+
+// ============== PRICING RULE (Quantity Breaks) ==============
+
+enum PricingRuleType {
+  PERCENTAGE  // % discount based on quantity
+  FIXED_PRICE // Fixed price per unit based on quantity
+}
+
+model PricingRule {
+  id          String          @id @default(cuid())
+  name        String          // "Volume Discount", "Bulk Pricing"
+  code        String          // "volume_discount", "bulk_pricing"
+  description String?
+  type        PricingRuleType @default(PERCENTAGE)
+  isActive    Boolean         @default(true)
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relations
+  companyId String
+  company   Company             @relation(fields: [companyId], references: [id])
+  breaks    PricingRuleBreak[]
+  products  ProductPricingRule[]
+
+  @@unique([companyId, code])
+  @@map("pricing_rules")
+}
+
+model PricingRuleBreak {
+  id            String  @id @default(cuid())
+  minQuantity   Int     // Minimum quantity for this break
+  maxQuantity   Int?    // Maximum quantity (null = unlimited)
+  value         Decimal // % discount OR fixed price depending on rule type
+
+  // Relations
+  pricingRuleId String
+  pricingRule   PricingRule @relation(fields: [pricingRuleId], references: [id], onDelete: Cascade)
+
+  @@map("pricing_rule_breaks")
+}
+
+model ProductPricingRule {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  // Relations
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  pricingRuleId String
+  pricingRule   PricingRule @relation(fields: [pricingRuleId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, pricingRuleId])
+  @@map("product_pricing_rules")
+}
+
+// ============== USER ==============
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      UserRole @default(DISTRIBUTOR)
+  language  String   @default("en")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Session preference
+  sessionDurationDays Int @default(7)
+
+  // Relations
+  companyId  String
+  company    Company   @relation(fields: [companyId], references: [id])
+  customerId String?   @unique
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  // Auth
+  otpCode      String?
+  otpExpiresAt DateTime?
+
+  // Activity
+  orderChanges OrderHistory[]
+
+  // Soft delete relations
+  productsDeleted          Product[]          @relation("ProductDeletedBy")
+  categoriesDeleted        Category[]         @relation("CategoryDeletedBy")
+  customersDeleted         Customer[]         @relation("CustomerDeletedBy")
+  customerCategoriesDeleted CustomerCategory[] @relation("CustomerCategoryDeletedBy")
+  invoicesDeleted          Invoice[]          @relation("InvoiceDeletedBy")
+  ordersDeleted            Order[]            @relation("OrderDeletedBy")
+  shipmentsDeleted         Shipment[]         @relation("ShipmentDeletedBy")
+  packingListsDeleted      PackingList[]      @relation("PackingListDeletedBy")
+  documentTemplatesDeleted DocumentTemplate[]  @relation("DocumentTemplateDeletedBy")
+
+  @@map("users")
+}
+
+// ============== CATEGORY ==============
+
+model Category {
+  id        String    @id @default(cuid())
+  nameEn    String
+  nameCn    String?
+  parentId  String?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt    DateTime?
+  deletedBy    String?
+  deletedByUser User?    @relation("CategoryDeletedBy", fields: [deletedBy], references: [id])
+  deleteReason String?
+
+  // Relations
+  companyId String
+  company   Company    @relation(fields: [companyId], references: [id])
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryHierarchy")
+  products  Product[]
+
+  @@map("categories")
+}
+
+// ============== PRODUCT ==============
+
+model Product {
+  id           String    @id @default(cuid())
+  ref          String
+  nameEn       String
+  nameCn       String?
+  nameCnAuto   String?
+  nameCnManual String?
+  description  String?
+  material     String?
+  hsCode       String?
+  photoUrl     String?
+  weightKg     Decimal?
+  isActive     Boolean   @default(true)
+  sortOrder    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  deletedBy    String?
+  deletedByUser User?    @relation("ProductDeletedBy", fields: [deletedBy], references: [id])
+  deleteReason String?
+
+  // Pricing - Legacy fields (kept for backward compatibility)
+  priceRmb         Decimal?
+  priceDistributor Decimal?
+  priceDirect      Decimal?
+  rrp              Decimal?
+  
+  // New pricing system - Base price and tier-specific prices
+  priceBase        Decimal?  // Base/reference price
+  prices           Json?     // Tier-specific prices: {"distributor": 150, "wholesale": 120}
+
+  // Suggested quantities
+  optimumQty1 Int?
+  optimumQty2 Int?
+  optimumQty3 Int?
+
+  // Custom fields stored as JSON
+  customFields Json?
+
+  // Serial number tracking
+  requiresSerial Boolean @default(false) @map("requires_serial")
+  serialPrefix   String?                 @map("serial_prefix")
+
+  // Relations
+  companyId  String
+  company    Company      @relation(fields: [companyId], references: [id])
+  categoryId String?
+  category   Category?    @relation(fields: [categoryId], references: [id])
+  orderLines OrderLine[]
+  pricingRules ProductPricingRule[]
+  substitutionsOriginal   SubstitutionRequest[] @relation("OriginalProduct")
+  substitutionsSubstitute SubstitutionRequest[] @relation("SubstituteProduct")
+  serialNumbers SerialNumber[]
+
+  @@unique([companyId, ref])
+  @@map("products")
+}
+
+// ============== CUSTOMER CATEGORY ==============
+
+model CustomerCategory {
+  id        String    @id @default(cuid())
+  nameEn    String
+  nameCn    String?
+  parentId  String?
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt    DateTime?
+  deletedBy    String?
+  deletedByUser User?    @relation("CustomerCategoryDeletedBy", fields: [deletedBy], references: [id])
+  deleteReason String?
+
+  // Relations
+  companyId String
+  company   Company            @relation(fields: [companyId], references: [id])
+  parent    CustomerCategory?  @relation("CustomerCategoryHierarchy", fields: [parentId], references: [id])
+  children  CustomerCategory[] @relation("CustomerCategoryHierarchy")
+  customers Customer[]
+
+  @@map("customer_categories")
+}
+
+// ============== CUSTOMER (Distributor) ==============
+
+model Customer {
+  id              String    @id @default(cuid())
+  companyName     String
+  country         String?
+  currency        String    @default("EUR")
+  priceType       PriceType @default(DISTRIBUTOR)
+  contactName     String?
+  email           String
+  phone           String?
+  
+  // Legacy address fields (kept for backward compatibility)
+  shippingAddress String?
+  billingAddress  String?
+  
+  // Structured shipping address
+  shippingStreet     String?
+  shippingCity       String?
+  shippingState      String?
+  shippingPostalCode String?
+  shippingCountry    String?
+  
+  // Structured billing address
+  billingStreet      String?
+  billingCity        String?
+  billingState       String?
+  billingPostalCode  String?
+  billingCountry     String?
+  
+  vatNumber       String?
+  paymentTerms    String?   @default("Net 30")
+  paymentAlertsMuted Boolean @default(false) // Disable payment overdue alerts for this customer
+  language        String    @default("en")
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  deletedBy       String?
+  deletedByUser   User?     @relation("CustomerDeletedBy", fields: [deletedBy], references: [id])
+  deleteReason    String?
+
+  // Custom fields
+  customFields Json?
+
+  // Relations
+  companyId   String
+  company     Company           @relation(fields: [companyId], references: [id])
+  user        User?
+  orders      Order[]
+  priceTierId String?
+  priceTier   PriceTier?        @relation(fields: [priceTierId], references: [id])
+  categoryId  String?
+  category    CustomerCategory? @relation(fields: [categoryId], references: [id])
+  shippingAgents ShippingAgent[]
+  ledgerEntries  CustomerLedgerEntry[]
+  emails      CustomerEmail[]
+
+  @@map("customers")
+}
+
+// ============== SHIPPING AGENT ==============
+
+model ShippingAgent {
+  id              String   @id @default(cuid())
+  name            String   // Agent company name
+  contactPerson   String?
+  email           String?
+  phone           String?
+  address         String?  // Full address
+  street          String?
+  city            String?
+  state           String?
+  postalCode      String?
+  country         String?
+  notes           String?
+  isDefault       Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@map("shipping_agents")
+}
+
+// ============== ORDER ==============
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String
+  status          OrderStatus @default(DRAFT)
+  version         Int         @default(1)
+  shippingAddress String?
+  notesEn         String?
+  notesCn         String?
+  notesCnAuto     String?
+
+  // Dates
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  submittedAt          DateTime?
+  confirmedAt          DateTime?
+  shippedAt            DateTime?
+  modificationDeadline DateTime?
+  loadingDate          DateTime?
+  archivedAt           DateTime?
+  deletedAt            DateTime?
+  deletedBy            String?
+  deletedByUser        User?     @relation("OrderDeletedBy", fields: [deletedBy], references: [id])
+  deleteReason         String?
+
+  // Totals
+  subtotal       Decimal @default(0)
+  totalCharges   Decimal @default(0)
+  totalDiscounts Decimal @default(0)
+  totalAmount    Decimal @default(0)
+  currency       String  @default("EUR")
+
+  // Invoice fields
+  incoterm     String?
+  exchangeRate Decimal?
+
+  // Custom fields
+  customFields Json?
+
+  // Relations
+  companyId  String
+  company    Company        @relation(fields: [companyId], references: [id])
+  customerId String
+  customer   Customer       @relation(fields: [customerId], references: [id])
+  lines      OrderLine[]
+  history    OrderHistory[]
+  charges    OrderCharge[]
+  discounts  OrderDiscount[]
+  invoices   Invoice[]
+  substitutions SubstitutionRequest[]
+  payment    OrderPayment?
+  shipmentOrders ShipmentOrder[]
+  serialNumbers SerialNumber[]
+
+  @@unique([companyId, orderNumber])
+  @@map("orders")
+}
+
+// ============== ORDER LINE ==============
+
+model OrderLine {
+  id        String   @id @default(cuid())
+  quantity  Int
+  unitPrice Decimal
+  lineTotal Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Product snapshot (stored at order creation time to preserve history)
+  productRef    String?   // Product reference at time of order
+  productNameEn String?   // Product name (English) at time of order
+  productNameCn String?   // Product name (Chinese) at time of order
+
+  // Relations
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  serialNumbers SerialNumber[]
+
+  @@map("order_lines")
+}
+
+// ============== ORDER CHARGE (Additional fees) ==============
+
+model OrderCharge {
+  id          String   @id @default(cuid())
+  description String
+  amount      Decimal
+  isAutomatic Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // Document-level isolation: charges belong to a specific invoice/quote/proforma
+  invoiceId String? @map("invoice_id")
+
+  @@map("order_charges")
+}
+
+// ============== ORDER DISCOUNT ==============
+
+model OrderDiscount {
+  id          String   @id @default(cuid())
+  description String
+  type        String   // 'fixed', 'percent_products', 'percent_total'
+  value       Decimal  // Amount for fixed, percentage for percent types
+  amount      Decimal  // Calculated discount amount
+  createdAt   DateTime @default(now())
+
+  // Relations
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  // Document-level isolation: discounts belong to a specific invoice/quote/proforma
+  invoiceId String? @map("invoice_id")
+
+  @@map("order_discounts")
+}
+
+// ============== ORDER HISTORY (Audit Trail) ==============
+
+model OrderHistory {
+  id         String   @id @default(cuid())
+  version    Int
+  changeType String
+  field      String?
+  oldValue   String?
+  newValue   String?
+  reason     String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  orderId   String
+  order     Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  changedBy String
+  user      User   @relation(fields: [changedBy], references: [id])
+
+  @@map("order_history")
+}
+
+// ============== INVOICE ==============
+
+model Invoice {
+  id            String    @id @default(cuid())
+  invoiceNumber String
+  type          String    @default("INVOICE") // INVOICE, QUOTE, PROFORMA
+  issueDate     DateTime  @default(now())
+  dueDate       DateTime?
+  validUntil    DateTime? // For quotes - validity period
+  status        String    @default("draft")
+  pdfUrl        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+  deletedBy     String?
+  deletedByUser User?     @relation("InvoiceDeletedBy", fields: [deletedBy], references: [id])
+  deleteReason  String?
+  
+  // Sending info
+  sentAt        DateTime? // When the document was sent
+  sentTo        String?   // Email address it was sent to
+  archivedAt    DateTime? // When the document was archived
+
+  // Amounts
+  subtotal    Decimal
+  totalAmount Decimal
+  currency    String
+
+  // Relations
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  @@map("invoices")
+}
+
+// ============== TRANSLATION GLOSSARY ==============
+
+model TranslationGlossary {
+  id        String   @id @default(cuid())
+  termEn    String
+  termCn    String
+  context   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companyId String
+
+  @@unique([companyId, termEn])
+  @@map("translation_glossary")
+}
+
+// ============== SUBSTITUTION REQUEST ==============
+
+enum SubstitutionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model SubstitutionRequest {
+  id        String             @id @default(cuid())
+  status    SubstitutionStatus @default(PENDING)
+  reason    String?            // Reason for substitution (e.g., "out of stock")
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  // Quantity affected
+  originalQty    Int
+  substituteQty  Int?
+
+  // Admin notes
+  adminNotes String?
+
+  // Customer response
+  customerResponse String?
+  respondedAt      DateTime?
+
+  // Relations
+  orderId       String
+  order         Order   @relation(fields: [orderId], references: [id])
+  orderLineId   String?
+  originalProductId   String
+  originalProduct     Product @relation("OriginalProduct", fields: [originalProductId], references: [id])
+  substituteProductId String?
+  substituteProduct   Product? @relation("SubstituteProduct", fields: [substituteProductId], references: [id])
+
+  @@map("substitution_requests")
+}
+
+// ============== ORDER PAYMENT (T/T Tracking) ==============
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+}
+
+model OrderPayment {
+  id        String        @id @default(cuid())
+  status    PaymentStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Amounts
+  totalAmount      Decimal  // Total to pay
+  depositRequired  Decimal? // Required deposit amount
+  depositPaid      Decimal  @default(0)
+  balanceRequired  Decimal? // Required balance amount
+  balancePaid      Decimal  @default(0)
+  currency         String   @default("EUR")
+
+  // Due dates
+  depositDueDate DateTime?
+  balanceDueDate DateTime?
+
+  // Relations
+  orderId  String        @unique
+  order    Order         @relation(fields: [orderId], references: [id])
+  payments PaymentRecord[]
+
+  @@map("order_payments")
+}
+
+// ============== PAYMENT RECORD (Individual payments) ==============
+
+enum PaymentType {
+  DEPOSIT
+  BALANCE
+  OTHER
+}
+
+model PaymentRecord {
+  id        String      @id @default(cuid())
+  type      PaymentType
+  amount    Decimal
+  currency  String      @default("EUR")
+  reference String?     // Bank reference, transaction ID
+  method    String?     // "wire", "check", "credit"
+  notes     String?
+  paidAt    DateTime    @default(now())
+  createdAt DateTime    @default(now())
+
+  // Relations
+  orderPaymentId String
+  orderPayment   OrderPayment @relation(fields: [orderPaymentId], references: [id])
+
+  @@map("payment_records")
+}
+
+// ============== SHIPMENT (Grouped Orders for Container/Shipping) ==============
+
+enum ShipmentStatus {
+  DRAFT
+  PREPARING
+  LOADING
+  SHIPPED
+  DELIVERED
+}
+
+enum TransportMethod {
+  SEA_FREIGHT
+  AIR_FREIGHT
+  RAIL_FREIGHT
+  ROAD_FREIGHT
+  EXPRESS_COURIER
+  FACTORY_PICKUP
+  OTHER
+}
+
+model Shipment {
+  id              String         @id @default(cuid())
+  shipmentNumber  String
+  status          ShipmentStatus @default(DRAFT)
+  name            String?        // Optional name like "Container March 2026"
+  
+  // Transport method
+  transportMethod     TransportMethod @default(SEA_FREIGHT)
+  
+  // Common fields for all transport methods
+  carrierName         String?    // Maersk, DHL, SNCF, etc.
+  trackingNumber      String?    // Universal tracking number
+  originLocation      String?    // Departure location (city/port/airport)
+  destinationLocation String?    // Arrival location (city/port/airport)
+  
+  // Method-specific details (flexible JSON)
+  transportDetails    Json?      // Contains method-specific fields
+  
+  // Legacy sea freight fields (kept for backward compatibility)
+  containerNumber String?
+  blNumber        String?        // Bill of Lading
+  vessel          String?
+  portOfLoading   String?
+  portOfDischarge String?
+  
+  // Dates
+  estimatedLoadingDate  DateTime?
+  actualLoadingDate     DateTime?
+  estimatedArrivalDate  DateTime?
+  actualArrivalDate     DateTime?
+  
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  archivedAt DateTime?
+  deletedAt    DateTime?
+  deletedBy    String?
+  deletedByUser User?    @relation("ShipmentDeletedBy", fields: [deletedBy], references: [id])
+  deleteReason String?
+  
+  // Notes
+  notes String?
+  
+  // Relations
+  companyId    String
+  orders       ShipmentOrder[]
+  packingLists PackingList[]
+  
+  @@unique([companyId, shipmentNumber])
+  @@map("shipments")
+}
+
+// Join table for Shipment <-> Order (many-to-many)
+model ShipmentOrder {
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  createdAt  DateTime @default(now())
+  
+  @@unique([shipmentId, orderId])
+  @@map("shipment_orders")
+}
+
+// ============== PACKING LIST ==============
+
+enum PackingListType {
+  EXPORT    // For customer/customs
+  FACTORY   // For factory preparation (in chosen language)
+}
+
+enum PackingListStatus {
+  DRAFT
+  GENERATED
+  SENT
+}
+
+model PackingList {
+  id               String            @id @default(cuid())
+  packingListNumber String
+  type             PackingListType   @default(EXPORT)
+  status           PackingListStatus @default(DRAFT)
+  
+  // Language (for factory packing list)
+  language         String            @default("en")
+  
+  // Mode: simple (auto from order) or advanced (manual editing/grouping)
+  mode             String            @default("simple") // simple, advanced
+  
+  // PDF
+  pdfUrl           String?
+  
+  // For single order packing list
+  orderId          String?
+  
+  // For grouped packing list (shipment)
+  shipmentId       String?
+  shipment         Shipment?         @relation(fields: [shipmentId], references: [id])
+  
+  // Totals
+  totalPackages    Int?
+  totalNetWeight   Decimal?          // Net weight (product only)
+  totalGrossWeight Decimal?          // Gross weight (with packaging)
+  totalWeight      Decimal?          // Legacy - same as gross weight
+  totalCbm         Decimal?          // Cubic meters
+  totalCartons     Int?              // Legacy
+  
+  // Grouping option
+  groupByHsCode    Boolean           @default(false)
+  
+  // Shipping details (for export)
+  shipper          String?           // Company name and address
+  shipperTaxId     String?
+  consignee        String?           // Customer info
+  invoiceNumber    String?           // Related invoice number
+  invoiceDate      DateTime?
+  shippingPort     String?           // Port of loading
+  destinationPort  String?           // Port of discharge
+  
+  // Custom header/footer text (rich text)
+  headerText       String?           @db.Text
+  footerText       String?           @db.Text
+  customNotes      String?           @db.Text
+  
+  // Dates
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  sentAt           DateTime?
+  sentTo           String?           // Email address it was sent to
+  archivedAt       DateTime?         // When the document was archived
+  deletedAt        DateTime?
+  deletedBy        String?
+  deletedByUser    User?             @relation("PackingListDeletedBy", fields: [deletedBy], references: [id])
+  deleteReason     String?
+  
+  // Notes
+  notes            String?
+  
+  // Relations
+  companyId        String
+  lines            PackingListLine[]
+  
+  @@unique([companyId, packingListNumber])
+  @@map("packing_lists")
+}
+
+// Packing List Line - individual items or grouped items
+model PackingListLine {
+  id              String      @id @default(cuid())
+  packingListId   String
+  packingList     PackingList @relation(fields: [packingListId], references: [id], onDelete: Cascade)
+  
+  // Display order
+  sortOrder       Int         @default(0)
+  
+  // Product info (can be custom text for grouped items)
+  productId       String?
+  hsCode          String?
+  specification   String
+  
+  // Quantities
+  unit            String      @default("PCS")
+  quantity        Int         @default(1)
+  packages        Int         @default(1)
+  packageNumber   Int?
+  
+  // Weights
+  netWeight       Decimal?
+  grossWeight     Decimal?
+  cbm             Decimal?
+  
+  // For grouping - can contain multiple product IDs
+  groupedProductIds String?
+  isGrouped       Boolean     @default(false)
+  groupName       String?
+  
+  // Custom notes for this line
+  lineNotes       String?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  @@map("packing_list_lines")
+}
+
+// ============== GROUPED INVOICE ==============
+
+model GroupedInvoice {
+  id               String   @id @default(cuid())
+  invoiceNumber    String
+  issueDate        DateTime @default(now())
+  dueDate          DateTime?
+  status           String   @default("draft")
+  pdfUrl           String?
+  
+  // Amounts
+  subtotal         Decimal
+  totalAmount      Decimal
+  currency         String
+  
+  // Customer (all orders must be from same customer)
+  customerId       String
+  
+  // Notes
+  notes            String?
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  // Relations
+  companyId        String
+  items            GroupedInvoiceOrder[]
+  
+  @@unique([companyId, invoiceNumber])
+  @@map("grouped_invoices")
+}
+
+// Join table for GroupedInvoice <-> Order
+model GroupedInvoiceOrder {
+  id               String         @id @default(cuid())
+  groupedInvoiceId String
+  groupedInvoice   GroupedInvoice @relation(fields: [groupedInvoiceId], references: [id], onDelete: Cascade)
+  orderId          String
+  createdAt        DateTime       @default(now())
+  
+  @@unique([groupedInvoiceId, orderId])
+  @@map("grouped_invoice_orders")
+}
+
+// ============== DOCUMENT TEMPLATE ==============
+
+model DocumentTemplate {
+  id           String    @id @default(cuid())
+  name         String
+  documentType String    // 'invoice', 'quote', 'packingListExport', 'packingListFactory'
+  isDefault    Boolean   @default(false)
+  isSuggested  Boolean   @default(false) // System-provided templates
+  
+  // Layout configuration stored as JSON
+  layoutElements Json?   // Array of element positions
+  tableColumns   Json?   // Array of column configurations
+  margins        Json?   // {top, bottom, left, right}
+  displaySettings Json?  // Additional display options
+  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  deletedBy    String?
+  deletedByUser User?    @relation("DocumentTemplateDeletedBy", fields: [deletedBy], references: [id])
+  deleteReason String?
+  
+  // Relations
+  companyId    String
+  company      Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  @@unique([companyId, name, documentType])
+  @@map("document_templates")
+}
+
+// ============== COMPANY BRANDING ==============
+
+model CompanyBranding {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Colors
+  primaryColor   String @default("#0071e3") @map("primary_color")
+  secondaryColor String @default("#34c759") @map("secondary_color")
+  accentColor    String @default("#ff9500") @map("accent_color")
+
+  // Logo
+  logoUrl        String? @map("logo_url")
+  logoWidth      Int     @default(150) @map("logo_width")
+  faviconUrl     String? @map("favicon_url")
+  loginBannerUrl String? @map("login_banner_url")
+
+  // Text
+  companyLegalName String? @map("company_legal_name")
+  tagline          String?
+
+  // Documents
+  invoiceHeader    String? @map("invoice_header")
+  invoiceFooter    String? @map("invoice_footer")
+  emailSignature   String? @map("email_signature")
+
+  // Custom CSS (advanced)
+  customCss String? @map("custom_css")
+
+  // Relations
+  companyId String  @unique @map("company_id")
+  company   Company @relation(fields: [companyId], references: [id])
+
+  @@map("company_branding")
+}
+
+// ============== CUSTOMER LEDGER ==============
+
+enum LedgerEntryType {
+  OPENING_BALANCE  // Initial balance when starting to use the system
+  INVOICE          // Invoice issued (increases what customer owes)
+  PAYMENT          // Payment received (decreases what customer owes)
+  CREDIT_NOTE      // Credit issued to customer (decreases what customer owes)
+  ADJUSTMENT       // Manual adjustment (can be positive or negative)
+}
+
+model CustomerLedgerEntry {
+  id          String          @id @default(cuid())
+  type        LedgerEntryType
+  date        DateTime        // Date of the transaction
+  description String          // e.g., "Invoice INV-001" or "Bank transfer - Ref: ABC123"
+  reference   String?         // Invoice number, payment reference, etc.
+  
+  // Amount (positive = customer owes more, negative = customer owes less)
+  amount      Decimal
+  currency    String          @default("EUR")
+  
+  // Optional link to invoice (for automatic entries)
+  invoiceId   String?
+  
+  // Notes
+  notes       String?
+  
+  // Metadata
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  createdBy   String?         // User who created the entry
+  
+  // Relations
+  customerId  String
+  customer    Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  companyId   String
+  
+  @@index([customerId, date])
+  @@index([companyId, customerId])
+  @@map("customer_ledger_entries")
+}
+
+// ============== CUSTOMER EMAIL (Multiple emails per customer) ==============
+
+model CustomerEmail {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("customer_emails")
+}
+
+// ============== SERIAL NUMBERS ==============
+
+model SerialNumber {
+  id          String   @id @default(cuid())
+  serial      String
+  generatedAt DateTime @default(now()) @map("generated_at")
+  generatedBy String                   @map("generated_by")
+
+  orderLineId String    @map("order_line_id")
+  orderLine   OrderLine @relation(fields: [orderLineId], references: [id], onDelete: Cascade)
+  productId   String    @map("product_id")
+  product     Product   @relation(fields: [productId], references: [id])
+  companyId   String    @map("company_id")
+  orderId     String    @map("order_id")
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, serial])
+  @@index([orderId])
+  @@index([orderLineId])
+  @@map("serial_numbers")
+}
+
+// ============== AUDIT LOG ==============
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  companyId   String   @map("company_id")
+
+  userId      String?  @map("user_id")
+  userEmail   String?  @map("user_email")
+  userRole    String?  @map("user_role")
+  ipAddress   String?  @map("ip_address")
+  userAgent   String?  @map("user_agent")
+
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String?  @map("entity_id")
+
+  changes     Json?
+  metadata    Json?
+
+  timestamp   DateTime @default(now())
+
+  @@index([companyId])
+  @@index([companyId, entityType])
+  @@index([companyId, userId])
+  @@index([companyId, timestamp])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
