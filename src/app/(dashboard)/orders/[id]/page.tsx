@@ -890,7 +890,7 @@ export default function OrderDetailPage() {
                 <span className="text-[#86868b]">Subtotal</span>
                 <span className="text-[#1d1d1f]">{currencySymbol}{formatNumber(isEditing ? editedSubtotal : order.subtotal)}</span>
               </div>
-              {order.shippingFee > 0 && (
+              {(order.shippingFee ?? 0) > 0 && (
                 <div className="flex justify-between text-[14px]">
                   <span className="text-[#86868b]">Shipping</span>
                   <span className="text-[#1d1d1f]">{currencySymbol}{formatNumber(order.shippingFee)}</span>
