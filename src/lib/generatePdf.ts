@@ -2709,10 +2709,12 @@ interface ExportPackingListData {
   customerAddress: string
   customerVat?: string
   customerContact?: string
+  customerCustomFields?: Array<{ label: string; value: string }>
   consigneeSameAsCustomer: boolean
   consigneeName?: string
   consigneeAddress?: string
   consigneeContact?: string
+  consigneeCustomFields?: Array<{ label: string; value: string }>
   useShippingAgent: boolean
   shippingAgentName?: string
   shippingAgentAddress?: string
