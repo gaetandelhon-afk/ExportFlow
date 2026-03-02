@@ -893,7 +893,7 @@ export default function OrderDetailPage() {
               {(order.shippingFee ?? 0) > 0 && (
                 <div className="flex justify-between text-[14px]">
                   <span className="text-[#86868b]">Shipping</span>
-                  <span className="text-[#1d1d1f]">{currencySymbol}{formatNumber(order.shippingFee)}</span>
+                  <span className="text-[#1d1d1f]">{currencySymbol}{formatNumber(order.shippingFee ?? 0)}</span>
                 </div>
               )}
               <div className="flex justify-between text-[17px] font-semibold pt-2 border-t border-[#d2d2d7]/30">
