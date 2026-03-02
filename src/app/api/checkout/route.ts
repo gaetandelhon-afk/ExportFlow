@@ -9,15 +9,15 @@ import { getApiSession } from '@/lib/auth'
 
 export async function POST(req: Request) {
   try {
-    const session = await getApiSession()
-    if (!session) {
+    const authSession = await getApiSession()
+    if (!authSession) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    const rateLimited = applyRateLimit(`checkout:${session.userId}`, RATE_LIMITS.checkout)
+    const rateLimited = applyRateLimit(`checkout:${authSession.userId}`, RATE_LIMITS.checkout)
     if (rateLimited) return rateLimited
 
     const validated = await validateBody(req, checkoutSchema)
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     const client = await clerkClient()
-    const user = await client.users.getUser(session.userId)
+    const user = await client.users.getUser(authSession.userId)
     const email = user.emailAddresses[0]?.emailAddress
 
     if (!email) {
@@ -50,12 +50,12 @@ export async function POST(req: Request) {
       const customer = await stripe.customers.create({
         email,
         metadata: {
-          clerkUserId: session.userId,
+          clerkUserId: authSession.userId,
         },
       })
       customerId = customer.id
 
-      await client.users.updateUserMetadata(session.userId, {
+      await client.users.updateUserMetadata(authSession.userId, {
         publicMetadata: {
           ...user.publicMetadata,
           stripeCustomerId: customerId,
@@ -65,12 +65,12 @@ export async function POST(req: Request) {
 
     const subscriptionData: Stripe.Checkout.SessionCreateParams.SubscriptionData = {
       metadata: {
-        clerkUserId: session.userId,
+        clerkUserId: authSession.userId,
       },
       ...(!skipTrial ? { trial_period_days: 14 } : {}),
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -86,11 +86,11 @@ export async function POST(req: Request) {
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/subscription?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/subscription`,
       metadata: {
-        clerkUserId: session.userId,
+        clerkUserId: authSession.userId,
       },
     })
 
-    return NextResponse.json({ url: session.url })
+    return NextResponse.json({ url: checkoutSession.url })
   } catch (error) {
     console.error('Checkout error:', error)
     return NextResponse.json(
