@@ -3,7 +3,6 @@
 import { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { 
   ArrowLeft, Package, AlertTriangle, CheckCircle, XCircle, Clock,
   ArrowRight, Send, Loader2, Search
@@ -231,15 +230,12 @@ export default function SubstitutionDetailPage({ params }: { params: Promise<{ i
             Original Product
           </h2>
           <div className="flex items-start gap-4">
-            <div className="w-20 h-20 bg-[#f5f5f7] rounded-xl flex items-center justify-center overflow-hidden relative">
+            <div className="w-20 h-20 bg-[#f5f5f7] rounded-xl flex items-center justify-center overflow-hidden">
               {substitution.originalProduct.photoUrl ? (
-                <Image 
+                <img 
                   src={substitution.originalProduct.photoUrl} 
                   alt={substitution.originalProduct.nameEn}
-                  width={80}
-                  height={80}
-                  className="object-contain p-2"
-                  unoptimized
+                  className="w-full h-full object-contain p-2"
                 />
               ) : (
                 <Package className="w-8 h-8 text-[#86868b]" />
@@ -296,15 +292,12 @@ export default function SubstitutionDetailPage({ params }: { params: Promise<{ i
                 >
                   {selectedSubstitute ? (
                     <>
-                      <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center overflow-hidden relative">
+                      <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center overflow-hidden">
                         {selectedSubstitute.photoUrl ? (
-                          <Image 
+                          <img 
                             src={selectedSubstitute.photoUrl} 
                             alt={selectedSubstitute.nameEn}
-                            width={48}
-                            height={48}
-                            className="object-contain"
-                            unoptimized
+                            className="w-full h-full object-contain"
                           />
                         ) : (
                           <Package className="w-5 h-5 text-[#86868b]" />
@@ -346,9 +339,9 @@ export default function SubstitutionDetailPage({ params }: { params: Promise<{ i
                           }}
                           className="w-full p-3 flex items-center gap-3 hover:bg-[#f5f5f7] text-left"
                         >
-                          <div className="w-10 h-10 bg-[#f5f5f7] rounded-lg flex items-center justify-center overflow-hidden relative">
+                          <div className="w-10 h-10 bg-[#f5f5f7] rounded-lg flex items-center justify-center overflow-hidden">
                             {product.photoUrl ? (
-                              <Image src={product.photoUrl} alt="" width={40} height={40} className="object-contain" unoptimized />
+                              <img src={product.photoUrl} alt="" className="w-full h-full object-contain" />
                             ) : (
                               <Package className="w-4 h-4 text-[#86868b]" />
                             )}
@@ -380,15 +373,12 @@ export default function SubstitutionDetailPage({ params }: { params: Promise<{ i
             </>
           ) : substitution.substituteProduct ? (
             <div className="flex items-start gap-4">
-              <div className="w-20 h-20 bg-[#f5f5f7] rounded-xl flex items-center justify-center overflow-hidden relative">
+              <div className="w-20 h-20 bg-[#f5f5f7] rounded-xl flex items-center justify-center overflow-hidden">
                 {substitution.substituteProduct.photoUrl ? (
-                  <Image 
+                  <img 
                     src={substitution.substituteProduct.photoUrl} 
                     alt={substitution.substituteProduct.nameEn}
-                    width={80}
-                    height={80}
-                    className="object-contain p-2"
-                    unoptimized
+                    className="w-full h-full object-contain p-2"
                   />
                 ) : (
                   <Package className="w-8 h-8 text-[#86868b]" />

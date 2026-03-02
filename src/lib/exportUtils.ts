@@ -1,3 +1,5 @@
+import * as XLSX from 'xlsx'
+
 export type ExportFormat = 'excel' | 'csv' | 'pdf'
 
 export interface ExportColumn {
@@ -194,8 +196,7 @@ export function prepareDataForExport(data: any[], columns: ExportColumn[]): any[
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function exportToExcel(data: any[], filename: string): Promise<void> {
-  const XLSX = await import('xlsx')
+export function exportToExcel(data: any[], filename: string): void {
   const worksheet = XLSX.utils.json_to_sheet(data)
   const workbook = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Data')
@@ -217,8 +218,7 @@ export async function exportToExcel(data: any[], filename: string): Promise<void
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function exportToCSV(data: any[], filename: string): Promise<void> {
-  const XLSX = await import('xlsx')
+export function exportToCSV(data: any[], filename: string): void {
   const worksheet = XLSX.utils.json_to_sheet(data)
   const csv = XLSX.utils.sheet_to_csv(worksheet)
   
@@ -281,18 +281,18 @@ export function exportToPDF(data: any[], filename: string, title: string): void 
 
 // Helper to download data based on format
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function downloadExport(
+export function downloadExport(
   data: any[], 
   options: { format: ExportFormat; filename: string; title?: string }
-): Promise<void> {
+): void {
   const { format, filename, title } = options
   
   switch (format) {
     case 'excel':
-      await exportToExcel(data, filename)
+      exportToExcel(data, filename)
       break
     case 'csv':
-      await exportToCSV(data, filename)
+      exportToCSV(data, filename)
       break
     case 'pdf':
       exportToPDF(data, filename, title || filename)

@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import ProductCard from '@/components/ProductCard'
 import ProductOptionSelector from '@/components/ProductOptionSelector'
 import { useDistributor, Product, SelectedProductOption } from '@/contexts/DistributorContext'
@@ -161,11 +160,11 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Image */}
           <div 
-            className="aspect-square rounded-2xl flex items-center justify-center relative"
+            className="aspect-square rounded-2xl flex items-center justify-center"
             style={{ backgroundColor: 'var(--color-bg-secondary)', border: '1px solid rgba(210, 210, 215, 0.3)' }}
           >
             {product.imageUrl ? (
-              <Image src={product.imageUrl} alt={product.nameEn} fill className="object-cover rounded-2xl" unoptimized />
+              <img src={product.imageUrl} alt={product.nameEn} className="w-full h-full object-cover rounded-2xl" />
             ) : (
               <Package className="w-24 h-24" style={{ color: 'var(--color-text-tertiary)' }} />
             )}

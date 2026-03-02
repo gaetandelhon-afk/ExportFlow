@@ -8,6 +8,7 @@ import {
   Package, Check, Plane, Train, Truck, Factory, MoreHorizontal, Trash2, X
 } from 'lucide-react'
 import { useLocalization } from '@/hooks/useLocalization'
+import { useAuthFetch } from '@/hooks/useAuthFetch'
 
 interface Order {
   id: string
@@ -48,6 +49,7 @@ export default function NewShipmentPage() {
   const searchParams = useSearchParams()
   const preselectedOrderId = searchParams.get('order')
   const { currencySymbol, isLoaded } = useLocalization()
+  const authFetch = useAuthFetch()
   const [loading, setLoading] = useState(false)
   const [ordersLoading, setOrdersLoading] = useState(true)
   const [error, setError] = useState('')
@@ -207,7 +209,7 @@ export default function NewShipmentPage() {
         ? (etaDate || null) 
         : (estimatedArrivalDate || null)
 
-      const res = await fetch('/api/shipments', {
+      const res = await authFetch('/api/shipments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

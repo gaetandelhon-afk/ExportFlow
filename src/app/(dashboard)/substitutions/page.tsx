@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { 
   RefreshCcw, Search, Filter, Package, AlertTriangle, CheckCircle, 
   XCircle, Clock, ChevronRight, Eye, Loader2, ArrowRight
@@ -231,15 +230,12 @@ export default function SubstitutionsPage() {
                 >
                   <div className="flex items-start gap-4">
                     {/* Original Product Image */}
-                    <div className="w-16 h-16 bg-[#f5f5f7] rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0 relative">
+                    <div className="w-16 h-16 bg-[#f5f5f7] rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
                       {sub.originalProduct.photoUrl ? (
-                        <Image 
+                        <img 
                           src={sub.originalProduct.photoUrl} 
                           alt={sub.originalProduct.nameEn}
-                          width={64}
-                          height={64}
-                          className="object-contain p-1"
-                          unoptimized
+                          className="w-full h-full object-contain p-1"
                         />
                       ) : (
                         <Package className="w-6 h-6 text-[#86868b]" />

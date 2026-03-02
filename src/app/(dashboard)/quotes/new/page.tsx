@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { 
   ChevronLeft, Loader2, Plus, Minus, Trash2, Settings2,
   Search, ChevronRight, ShoppingCart, Package, Filter,
@@ -613,9 +612,9 @@ export default function NewQuotePage() {
                         }`}
                       >
                         {/* Image */}
-                        <div className="w-10 h-10 bg-[#f5f5f7] rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden relative">
+                        <div className="w-10 h-10 bg-[#f5f5f7] rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                           {product.photoUrl ? (
-                            <Image src={product.photoUrl} alt={product.nameEn} width={40} height={40} className="object-cover" unoptimized />
+                            <img src={product.photoUrl} alt={product.nameEn} className="w-full h-full object-cover" />
                           ) : (
                             <Package className="w-5 h-5 text-[#86868b]" />
                           )}
@@ -748,18 +747,16 @@ export default function NewQuotePage() {
                       )}
                       
                       {/* Product Image */}
-                      <div className={`bg-[#f5f5f7] flex items-center justify-center overflow-hidden group-hover:bg-[#f0f0f5] transition-colors relative ${
+                      <div className={`bg-[#f5f5f7] flex items-center justify-center overflow-hidden group-hover:bg-[#f0f0f5] transition-colors ${
                         viewMode === 'grid-small' ? 'aspect-square' :
                         viewMode === 'grid-large' ? 'aspect-square' : 
                         'aspect-square'
                       }`}>
                         {product.photoUrl ? (
-                          <Image 
+                          <img 
                             src={product.photoUrl} 
                             alt={product.nameEn} 
-                            fill
-                            className="object-contain p-2" 
-                            unoptimized
+                            className="w-full h-full object-contain p-2" 
                           />
                         ) : (
                           <Package className={`text-[#86868b] ${

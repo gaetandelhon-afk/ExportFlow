@@ -9,6 +9,7 @@ import {
   LayoutList, GanttChartSquare, Archive, CheckCircle
 } from 'lucide-react'
 import { useLocalization } from '@/hooks/useLocalization'
+import { useAuthFetch } from '@/hooks/useAuthFetch'
 import { useTheme } from '@/contexts/ThemeContext'
 import ShipmentGantt from '@/components/ShipmentGantt'
 
@@ -66,6 +67,7 @@ const transportMethodConfig: Record<TransportMethod, {
 
 export default function ShipmentsPage() {
   const { currencySymbol, isLoaded } = useLocalization()
+  const authFetch = useAuthFetch()
   const { resolvedTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
   const [shipments, setShipments] = useState<Shipment[]>([])
@@ -112,7 +114,7 @@ export default function ShipmentsPage() {
   const handleArchive = async (shipmentId: string) => {
     setArchiving(shipmentId)
     try {
-      const res = await fetch(`/api/shipments/${shipmentId}`, {
+      const res = await authFetch(`/api/shipments/${shipmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ archivedAt: new Date().toISOString() })
@@ -400,7 +402,7 @@ export default function ShipmentsPage() {
                             <button 
                               onClick={async () => {
                                 try {
-                                  await fetch(`/api/shipments/${shipment.id}`, {
+                                  await authFetch(`/api/shipments/${shipment.id}`, {
                                     method: 'PATCH',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ 

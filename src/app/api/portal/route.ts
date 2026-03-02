@@ -1,12 +1,12 @@
-import { clerkClient } from '@clerk/nextjs/server'
+import { auth, clerkClient } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
-import { getApiSession } from '@/lib/auth'
 
 export async function POST() {
   try {
-    const session = await getApiSession()
-    if (!session) {
+    const { userId } = await auth()
+
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -14,7 +14,7 @@ export async function POST() {
     }
 
     const client = await clerkClient()
-    const user = await client.users.getUser(session.userId)
+    const user = await client.users.getUser(userId)
     const stripeCustomerId = user.publicMetadata?.stripeCustomerId as string | undefined
 
     if (!stripeCustomerId) {

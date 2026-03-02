@@ -8,6 +8,7 @@ import {
   FolderOpen, Globe, Users, Building2, RotateCcw, ChevronDown, ChevronRight
 } from 'lucide-react'
 import { useLocalization } from '@/hooks/useLocalization'
+import { useAuthFetch } from '@/hooks/useAuthFetch'
 
 interface Customer {
   id: string
@@ -82,6 +83,7 @@ function getContinent(country: string | null): string {
 
 export default function ShipmentArchivesPage() {
   const { currencySymbol, isLoaded } = useLocalization()
+  const authFetch = useAuthFetch()
   const [shipments, setShipments] = useState<Shipment[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -128,7 +130,7 @@ export default function ShipmentArchivesPage() {
   const handleUnarchive = async (shipmentId: string) => {
     setUnarchiving(shipmentId)
     try {
-      const res = await fetch(`/api/shipments/${shipmentId}`, {
+      const res = await authFetch(`/api/shipments/${shipmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ archivedAt: null })

@@ -192,7 +192,7 @@ export default function OrderDetailPage() {
       }
     }
     try {
-      const res = await fetch(`/api/orders/${orderId}`, {
+      const res = await authFetch(`/api/orders/${orderId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
@@ -326,7 +326,7 @@ export default function OrderDetailPage() {
     setSaving(true)
     try {
       // In real app, call API to save changes
-      const res = await fetch(`/api/orders/${orderId}`, {
+      const res = await authFetch(`/api/orders/${orderId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -544,7 +544,7 @@ export default function OrderDetailPage() {
       quantity: l.quantity,
       prefix: l.product.serialPrefix || null,
     }))
-    const res = await fetch(`/api/orders/${orderId}/serials`, {
+    const res = await authFetch(`/api/orders/${orderId}/serials`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ lines: linesToGenerate }),
@@ -579,7 +579,7 @@ export default function OrderDetailPage() {
       setSavingSerials(false)
       return
     }
-    const res = await fetch(`/api/orders/${orderId}/serials`, {
+    const res = await authFetch(`/api/orders/${orderId}/serials`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ serials: serialsArray }),
@@ -604,7 +604,7 @@ export default function OrderDetailPage() {
 
   const handleClearSerials = async () => {
     if (!confirm(`Clear all ${existingSerials.length} serial number(s) for this order? This cannot be undone.`)) return
-    const res = await fetch(`/api/orders/${orderId}/serials`, { method: 'DELETE' })
+    const res = await authFetch(`/api/orders/${orderId}/serials`, { method: 'DELETE' })
     if (res.ok) {
       setExistingSerials([])
       setSerials({})
@@ -1276,7 +1276,7 @@ export default function OrderDetailPage() {
                     </div>
                     <button
                       onClick={async () => {
-                        const res = await fetch(`/api/orders/${orderId}/serials`, {
+                        const res = await authFetch(`/api/orders/${orderId}/serials`, {
                           method: 'PUT',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ lines: [{ orderLineId: line.id, productId: line.product.id, quantity: line.quantity, prefix: line.product.serialPrefix }] }),

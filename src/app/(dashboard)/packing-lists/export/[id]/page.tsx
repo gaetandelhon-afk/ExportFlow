@@ -60,12 +60,14 @@ interface PackingListData {
   customerAddress: string
   customerVat: string
   customerContact: string
+  customerCustomFields: Array<{ label: string; value: string }>
   
   // Consignee (can be different from customer)
   consigneeSameAsCustomer: boolean
   consigneeName: string
   consigneeAddress: string
   consigneeContact: string
+  consigneeCustomFields: Array<{ label: string; value: string }>
   
   // Shipping Agent
   useShippingAgent: boolean
@@ -267,10 +269,12 @@ export default function ExportPackingListEditPage() {
           customerAddress: '',
           customerVat: '',
           customerContact: '',
+          customerCustomFields: [],
           consigneeSameAsCustomer: true,
           consigneeName: '',
           consigneeAddress: '',
           consigneeContact: '',
+          consigneeCustomFields: [],
           useShippingAgent: false,
           shippingAgentName: '',
           shippingAgentAddress: '',
@@ -315,10 +319,12 @@ export default function ExportPackingListEditPage() {
             customerAddress: '',
             customerVat: '',
             customerContact: '',
+            customerCustomFields: (() => { try { return JSON.parse(pl.customerCustomFields || '[]') } catch { return [] } })(),
             consigneeSameAsCustomer: !pl.consignee,
             consigneeName: pl.consignee || '',
             consigneeAddress: '',
             consigneeContact: '',
+            consigneeCustomFields: (() => { try { return JSON.parse(pl.consigneeCustomFields || '[]') } catch { return [] } })(),
             useShippingAgent: false,
             shippingAgentName: '',
             shippingAgentAddress: '',
@@ -336,28 +342,59 @@ export default function ExportPackingListEditPage() {
             headerText: pl.headerText || '',
             footerText: pl.footerText || '',
             customNotes: pl.customNotes || '',
-            lines: (pl.lines || []).map((l: {
-              id: string; sortOrder: number; productId?: string; hsCode?: string;
-              specification: string; unit: string; quantity: number; packages: number;
-              packageNumber?: number; grossWeight?: number; netWeight?: number; cbm?: number;
-              isGrouped: boolean; groupedProductIds?: string; lineNotes?: string;
-            }) => ({
-              id: l.id,
-              sortOrder: l.sortOrder,
-              productId: l.productId || undefined,
-              hsCode: l.hsCode || '',
-              specification: l.specification || '',
-              unit: l.unit || 'PCS',
-              quantity: l.quantity,
-              packages: l.packages,
-              packageNumber: l.packageNumber || undefined,
-              grossWeight: Number(l.grossWeight || 0),
-              netWeight: Number(l.netWeight || 0),
-              cbm: Number(l.cbm || 0),
-              isGrouped: l.isGrouped || false,
-              groupedProductIds: l.groupedProductIds ? l.groupedProductIds.split(',').filter(Boolean) : undefined,
-              lineNotes: l.lineNotes || undefined,
-            })),
+            lines: (() => {
+              // If DB has saved lines, use them
+              if (pl.lines && pl.lines.length > 0) {
+                return pl.lines.map((l: {
+                  id: string; sortOrder: number; productId?: string; hsCode?: string;
+                  specification: string; unit: string; quantity: number; packages: number;
+                  packageNumber?: number; grossWeight?: number; netWeight?: number; cbm?: number;
+                  isGrouped: boolean; groupedProductIds?: string; lineNotes?: string;
+                }) => ({
+                  id: l.id,
+                  sortOrder: l.sortOrder,
+                  productId: l.productId || undefined,
+                  hsCode: l.hsCode || '',
+                  specification: l.specification || '',
+                  unit: l.unit || 'PCS',
+                  quantity: l.quantity,
+                  packages: l.packages,
+                  packageNumber: l.packageNumber || undefined,
+                  grossWeight: Number(l.grossWeight || 0),
+                  netWeight: Number(l.netWeight || 0),
+                  cbm: Number(l.cbm || 0),
+                  isGrouped: l.isGrouped || false,
+                  groupedProductIds: l.groupedProductIds ? l.groupedProductIds.split(',').filter(Boolean) : undefined,
+                  lineNotes: l.lineNotes || undefined,
+                }))
+              }
+              // Auto-populate from shipment orders if lines are empty
+              if (pl.shipment?.orders?.length > 0) {
+                let sortIdx = 0
+                const autoLines: PackingListLine[] = []
+                for (const so of pl.shipment.orders) {
+                  for (const line of (so.order?.lines || [])) {
+                    const weight = line.product?.weightKg ? Number(line.product.weightKg) * line.quantity : 0
+                    autoLines.push({
+                      id: `auto_${sortIdx}`,
+                      sortOrder: sortIdx++,
+                      productId: line.product?.id,
+                      hsCode: line.product?.hsCode || '',
+                      specification: line.product?.nameEn || line.product?.ref || '',
+                      unit: 'PCS',
+                      quantity: line.quantity,
+                      packages: 1,
+                      grossWeight: weight * 1.05,
+                      netWeight: weight,
+                      cbm: 0,
+                      isGrouped: false,
+                    })
+                  }
+                }
+                return autoLines
+              }
+              return []
+            })(),
             createdAt: pl.createdAt,
             updatedAt: pl.updatedAt,
           }
@@ -485,6 +522,44 @@ export default function ExportPackingListEditPage() {
       ),
       updatedAt: new Date().toISOString()
     })
+  }
+
+  const importFromShipmentOrders = async () => {
+    if (!packingList) return
+    try {
+      const res = await fetch(`/api/packing-lists/${packingListId}`)
+      if (!res.ok) return
+      const data = await res.json()
+      const pl = data.packingList
+      if (!pl.shipment?.orders?.length) {
+        alert('No shipment orders found to import from.')
+        return
+      }
+      let sortIdx = packingList.lines.length
+      const newLines: PackingListLine[] = []
+      for (const so of pl.shipment.orders) {
+        for (const line of (so.order?.lines || [])) {
+          const weight = line.product?.weightKg ? Number(line.product.weightKg) * line.quantity : 0
+          newLines.push({
+            id: `auto_${Date.now()}_${sortIdx}`,
+            sortOrder: sortIdx++,
+            productId: line.product?.id,
+            hsCode: line.product?.hsCode || '',
+            specification: line.product?.nameEn || line.product?.ref || '',
+            unit: 'PCS',
+            quantity: line.quantity,
+            packages: 1,
+            grossWeight: weight * 1.05,
+            netWeight: weight,
+            cbm: 0,
+            isGrouped: false,
+          })
+        }
+      }
+      setPackingList({ ...packingList, lines: [...packingList.lines, ...newLines] })
+    } catch (e) {
+      console.error('Failed to import from shipment orders:', e)
+    }
   }
 
   const addLine = () => {
@@ -747,10 +822,12 @@ export default function ExportPackingListEditPage() {
       customerAddress: packingList.customerAddress,
       customerVat: packingList.customerVat,
       customerContact: packingList.customerContact,
+      customerCustomFields: JSON.stringify(packingList.customerCustomFields || []),
       consigneeSameAsCustomer: packingList.consigneeSameAsCustomer,
       consigneeName: packingList.consigneeName,
       consigneeAddress: packingList.consigneeAddress,
       consigneeContact: packingList.consigneeContact,
+      consigneeCustomFields: JSON.stringify(packingList.consigneeCustomFields || []),
       useShippingAgent: packingList.useShippingAgent,
       shippingAgentName: packingList.shippingAgentName,
       shippingAgentAddress: packingList.shippingAgentAddress,
@@ -1155,6 +1232,53 @@ export default function ExportPackingListEditPage() {
                       />
                     </div>
                   </div>
+
+                  {/* Custom Fields — Customer */}
+                  <div className="pt-3 border-t border-[#d2d2d7]/20">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[12px] font-medium text-[#86868b] uppercase tracking-wide">Custom Fields</span>
+                      <button
+                        onClick={() => setPackingList({ ...packingList, customerCustomFields: [...(packingList.customerCustomFields || []), { label: '', value: '' }] })}
+                        className="flex items-center gap-1 text-[12px] text-[#0071e3] hover:underline"
+                      >
+                        <Plus className="w-3 h-3" /> Add field
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {(packingList.customerCustomFields || []).map((field, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            placeholder="Label (e.g. EORI)"
+                            value={field.label}
+                            onChange={(e) => {
+                              const updated = [...packingList.customerCustomFields]
+                              updated[idx] = { ...updated[idx], label: e.target.value }
+                              setPackingList({ ...packingList, customerCustomFields: updated })
+                            }}
+                            className="w-32 h-8 px-2 bg-[#f5f5f7] rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0071e3]"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Value"
+                            value={field.value}
+                            onChange={(e) => {
+                              const updated = [...packingList.customerCustomFields]
+                              updated[idx] = { ...updated[idx], value: e.target.value }
+                              setPackingList({ ...packingList, customerCustomFields: updated })
+                            }}
+                            className="flex-1 h-8 px-2 bg-[#f5f5f7] rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0071e3]"
+                          />
+                          <button
+                            onClick={() => setPackingList({ ...packingList, customerCustomFields: packingList.customerCustomFields.filter((_, i) => i !== idx) })}
+                            className="text-[#ff3b30] hover:text-[#cc2f27] flex-shrink-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1214,6 +1338,53 @@ export default function ExportPackingListEditPage() {
                         onChange={(e) => setPackingList({ ...packingList, consigneeContact: e.target.value })}
                         className="w-full h-10 px-3 bg-[#f5f5f7] rounded-lg text-[14px] focus:outline-none focus:ring-2 focus:ring-[#34c759]"
                       />
+                    </div>
+
+                    {/* Custom Fields — Consignee */}
+                    <div className="pt-3 border-t border-[#d2d2d7]/20">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[12px] font-medium text-[#86868b] uppercase tracking-wide">Custom Fields</span>
+                        <button
+                          onClick={() => setPackingList({ ...packingList, consigneeCustomFields: [...(packingList.consigneeCustomFields || []), { label: '', value: '' }] })}
+                          className="flex items-center gap-1 text-[12px] text-[#0071e3] hover:underline"
+                        >
+                          <Plus className="w-3 h-3" /> Add field
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {(packingList.consigneeCustomFields || []).map((field, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              placeholder="Label (e.g. Import License)"
+                              value={field.label}
+                              onChange={(e) => {
+                                const updated = [...packingList.consigneeCustomFields]
+                                updated[idx] = { ...updated[idx], label: e.target.value }
+                                setPackingList({ ...packingList, consigneeCustomFields: updated })
+                              }}
+                              className="w-36 h-8 px-2 bg-[#f5f5f7] rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-[#ff9500]"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Value"
+                              value={field.value}
+                              onChange={(e) => {
+                                const updated = [...packingList.consigneeCustomFields]
+                                updated[idx] = { ...updated[idx], value: e.target.value }
+                                setPackingList({ ...packingList, consigneeCustomFields: updated })
+                              }}
+                              className="flex-1 h-8 px-2 bg-[#f5f5f7] rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-[#ff9500]"
+                            />
+                            <button
+                              onClick={() => setPackingList({ ...packingList, consigneeCustomFields: packingList.consigneeCustomFields.filter((_, i) => i !== idx) })}
+                              className="text-[#ff3b30] hover:text-[#cc2f27] flex-shrink-0"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1303,6 +1474,14 @@ export default function ExportPackingListEditPage() {
                 >
                   <Plus className="w-4 h-4" />
                   Add Line
+                </button>
+                <button
+                  onClick={importFromShipmentOrders}
+                  className="flex items-center gap-2 px-3 py-2 bg-[#0071e3] text-white rounded-lg text-[13px] font-medium hover:bg-[#0077ed]"
+                  title="Import all products from shipment orders"
+                >
+                  <Package className="w-4 h-4" />
+                  Import from Orders
                 </button>
                 <button
                   onClick={packingList.groupByHsCode ? ungroupLines : groupByHsCode}

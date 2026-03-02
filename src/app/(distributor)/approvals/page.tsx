@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 import { 
   Package, AlertTriangle, CheckCircle, XCircle, Clock, 
   ArrowRight, Loader2, RefreshCcw, ThumbsUp, ThumbsDown
@@ -170,15 +169,12 @@ export default function ApprovalsPage() {
                       <div className="flex-1 p-4 bg-[#ff3b30]/5 rounded-xl">
                         <p className="text-[11px] font-medium text-[#ff3b30] mb-3">OUT OF STOCK</p>
                         <div className="flex items-start gap-3">
-                          <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0 relative">
+                          <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                             {sub.originalProduct.photoUrl ? (
-                              <Image 
+                              <img 
                                 src={sub.originalProduct.photoUrl} 
                                 alt={sub.originalProduct.nameEn}
-                                width={64}
-                                height={64}
-                                className="object-contain p-1"
-                                unoptimized
+                                className="w-full h-full object-contain p-1"
                               />
                             ) : (
                               <Package className="w-6 h-6 text-[#86868b]" />
@@ -208,15 +204,12 @@ export default function ApprovalsPage() {
                         <p className="text-[11px] font-medium text-[#34c759] mb-3">PROPOSED SUBSTITUTE</p>
                         {sub.substituteProduct ? (
                           <div className="flex items-start gap-3">
-                            <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0 relative">
+                            <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                               {sub.substituteProduct.photoUrl ? (
-                                <Image 
+                                <img 
                                   src={sub.substituteProduct.photoUrl} 
                                   alt={sub.substituteProduct.nameEn}
-                                  width={64}
-                                  height={64}
-                                  className="object-contain p-1"
-                                  unoptimized
+                                  className="w-full h-full object-contain p-1"
                                 />
                               ) : (
                                 <Package className="w-6 h-6 text-[#86868b]" />
@@ -327,15 +320,12 @@ export default function ApprovalsPage() {
                     <div key={sub.id} className="p-4">
                       <div className="flex items-center gap-4">
                         {/* Product */}
-                        <div className="w-12 h-12 bg-[#f5f5f7] rounded-xl flex items-center justify-center overflow-hidden relative">
+                        <div className="w-12 h-12 bg-[#f5f5f7] rounded-xl flex items-center justify-center overflow-hidden">
                           {sub.originalProduct.photoUrl ? (
-                            <Image 
+                            <img 
                               src={sub.originalProduct.photoUrl} 
                               alt={sub.originalProduct.nameEn}
-                              width={48}
-                              height={48}
-                              className="object-contain p-1"
-                              unoptimized
+                              className="w-full h-full object-contain p-1"
                             />
                           ) : (
                             <Package className="w-5 h-5 text-[#86868b]" />

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getApiSession } from '@/lib/auth'
+import { requireTenantAuth, isErrorResponse } from '@/lib/tenantGuard'
 import { prisma } from '@/lib/prisma'
 
 // POST /api/shipments/[id]/packing-list - Generate a packing list for a shipment
@@ -7,10 +7,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getApiSession()
-  if (!session || !session.companyId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const session = await requireTenantAuth()
+  if (isErrorResponse(session)) return session
 
   const { id } = await params
 
@@ -61,16 +59,48 @@ export async function POST(
       language = 'zh'
     }
 
-    // Calculate totals
+    // Collect all order lines across all orders in this shipment
+    const allLines: {
+      productId: string | null
+      specification: string
+      hsCode: string | null
+      unit: string
+      quantity: number
+      netWeight: number
+      grossWeight: number
+      cbm: number
+      packages: number
+      sortOrder: number
+    }[] = []
+
     let totalWeight = 0
+    let sortIndex = 0
+
     shipment.orders.forEach(so => {
       so.order.lines.forEach(line => {
         const weight = line.product?.weightKg ? Number(line.product.weightKg) : 0
-        totalWeight += weight * line.quantity
+        const lineWeight = weight * line.quantity
+        totalWeight += lineWeight
+
+        const specification = line.product?.nameEn || line.product?.ref || 'Unknown Product'
+        const hsCode = (line.product as { hsCode?: string })?.hsCode || null
+
+        allLines.push({
+          productId: line.product?.id || null,
+          specification,
+          hsCode,
+          unit: 'PCS',
+          quantity: line.quantity,
+          netWeight: lineWeight,
+          grossWeight: lineWeight * 1.05, // ~5% packaging weight
+          cbm: 0,
+          packages: 1,
+          sortOrder: sortIndex++,
+        })
       })
     })
 
-    // Create packing list
+    // Create packing list with lines in one transaction
     const packingList = await prisma.packingList.create({
       data: {
         packingListNumber,
@@ -80,8 +110,10 @@ export async function POST(
         shipmentId: id,
         companyId: session.companyId,
         totalWeight,
-        // TODO: Generate PDF and store URL
-      }
+        lines: {
+          create: allLines,
+        },
+      },
     })
 
     return NextResponse.json({ 

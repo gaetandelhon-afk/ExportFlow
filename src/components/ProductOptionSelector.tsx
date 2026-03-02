@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
 import { X, Check, Package } from 'lucide-react'
 import {
   ProductOptions,
@@ -129,15 +128,11 @@ export default function ProductOptionSelector({
         {/* Header */}
         <div className="flex items-center gap-4 p-5 border-b border-[#d2d2d7]/30">
           {productImage ? (
-            <div className="w-16 h-16 relative rounded-xl overflow-hidden">
-              <Image 
-                src={productImage} 
-                alt={productName}
-                fill
-                className="object-cover"
-                unoptimized
-              />
-            </div>
+            <img 
+              src={productImage} 
+              alt={productName}
+              className="w-16 h-16 object-cover rounded-xl"
+            />
           ) : (
             <div className="w-16 h-16 bg-[#f5f5f7] rounded-xl flex items-center justify-center">
               <Package className="w-8 h-8 text-[#86868b]" />
@@ -202,14 +197,12 @@ export default function ProductOptionSelector({
                       }`}
                     >
                       {/* Small Image/Icon */}
-                      <div className="w-12 h-12 flex-shrink-0 bg-[#f5f5f7] rounded-lg overflow-hidden flex items-center justify-center relative">
+                      <div className="w-12 h-12 flex-shrink-0 bg-[#f5f5f7] rounded-lg overflow-hidden flex items-center justify-center">
                         {mainImage ? (
-                          <Image
+                          <img
                             src={mainImage}
                             alt={option.name}
-                            fill
-                            className="object-cover"
-                            unoptimized
+                            className="w-full h-full object-cover"
                           />
                         ) : (
                           <Package className="w-5 h-5 text-[#86868b]" />

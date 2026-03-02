@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getApiSession } from '@/lib/auth'
+import { requireTenantAuth, isErrorResponse } from '@/lib/tenantGuard'
 import { prisma } from '@/lib/prisma'
 import { softDelete } from '@/lib/trash'
 import { createAuditLog, computeChanges } from '@/lib/auditLog'
@@ -10,10 +10,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getApiSession()
-  if (!session || !session.companyId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const session = await requireTenantAuth()
+  if (isErrorResponse(session)) return session
 
   const { id } = await params
 
@@ -106,10 +104,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getApiSession()
-  if (!session || !session.companyId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const session = await requireTenantAuth()
+  if (isErrorResponse(session)) return session
 
   const { id } = await params
 
@@ -202,10 +198,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await getApiSession()
-  if (!session || !session.companyId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const session = await requireTenantAuth()
+  if (isErrorResponse(session)) return session
 
   const { id } = await params
 

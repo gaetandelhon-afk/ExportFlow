@@ -10,6 +10,7 @@ import {
   Plane, Train, Truck, MoreHorizontal
 } from 'lucide-react'
 import { useLocalization } from '@/hooks/useLocalization'
+import { useAuthFetch } from '@/hooks/useAuthFetch'
 
 interface Order {
   id: string
@@ -99,6 +100,7 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
   const resolvedParams = use(params)
   const router = useRouter()
   const { currencySymbol, isLoaded } = useLocalization()
+  const authFetch = useAuthFetch()
   const [shipment, setShipment] = useState<Shipment | null>(null)
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -124,7 +126,7 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
   const updateStatus = async (newStatus: string) => {
     setActionLoading('status')
     try {
-      const res = await fetch(`/api/shipments/${resolvedParams.id}`, {
+      const res = await authFetch(`/api/shipments/${resolvedParams.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
@@ -142,16 +144,27 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
   const generatePackingList = async (type: 'EXPORT' | 'FACTORY') => {
     setActionLoading(type)
     try {
-      const res = await fetch(`/api/shipments/${resolvedParams.id}/packing-list`, {
+      const res = await authFetch(`/api/shipments/${resolvedParams.id}/packing-list`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type })
       })
       if (res.ok) {
+        const data = await res.json()
         await fetchShipment()
+        // Redirect to the newly created packing list
+        if (type === 'EXPORT') {
+          router.push(`/packing-lists/export/${data.packingList.id}`)
+        } else {
+          router.push(`/packing-lists/factory`)
+        }
+      } else {
+        const data = await res.json().catch(() => ({}))
+        alert(data.error || `Failed to generate ${type === 'EXPORT' ? 'Export' : 'Factory'} Packing List`)
       }
     } catch (error) {
       console.error('Failed to generate packing list:', error)
+      alert('Failed to generate packing list. Please try again.')
     } finally {
       setActionLoading(null)
     }
@@ -160,7 +173,7 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
   const sendToFactory = async () => {
     setActionLoading('send')
     try {
-      const res = await fetch(`/api/shipments/${resolvedParams.id}/send-to-factory`, {
+      const res = await authFetch(`/api/shipments/${resolvedParams.id}/send-to-factory`, {
         method: 'POST'
       })
       if (res.ok) {
@@ -180,7 +193,7 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
     
     setActionLoading('delete')
     try {
-      const res = await fetch(`/api/shipments/${resolvedParams.id}`, {
+      const res = await authFetch(`/api/shipments/${resolvedParams.id}`, {
         method: 'DELETE'
       })
       if (res.ok) {

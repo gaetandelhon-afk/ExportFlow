@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getApiSession } from '@/lib/auth'
+import { requireTenantAuth, isErrorResponse } from '@/lib/tenantGuard'
 import { prisma } from '@/lib/prisma'
 import { createAuditLog } from '@/lib/auditLog'
 
 // GET /api/shipments - List all shipments
 export async function GET(request: NextRequest) {
-  const session = await getApiSession()
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  if (!session.companyId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const session = await requireTenantAuth()
+  if (isErrorResponse(session)) return session
 
   const { searchParams } = new URL(request.url)
   const showArchived = searchParams.get('archived') === 'true'
@@ -105,13 +100,8 @@ export async function GET(request: NextRequest) {
 
 // POST /api/shipments - Create a new shipment
 export async function POST(request: NextRequest) {
-  const session = await getApiSession()
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  if (!session.companyId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const session = await requireTenantAuth()
+  if (isErrorResponse(session)) return session
 
   try {
     const body = await request.json()
