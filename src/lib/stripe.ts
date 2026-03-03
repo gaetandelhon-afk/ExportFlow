@@ -1,10 +1,8 @@
 import Stripe from 'stripe'
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing STRIPE_SECRET_KEY environment variable')
-}
+const key = process.env.STRIPE_SECRET_KEY || 'sk_placeholder_not_configured'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+export const stripe = new Stripe(key, {
   apiVersion: '2026-01-28.clover',
   typescript: true,
 })
