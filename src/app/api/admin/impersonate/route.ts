@@ -59,11 +59,12 @@ export async function POST(req: Request) {
   // Log the impersonation
   await prisma.auditLog.create({
     data: {
-      actorId: admin.userId,
-      actorType: 'superadmin',
+      userId: admin.userId,
+      userRole: 'superadmin',
       companyId: company.id,
       action: 'impersonation_started',
-      details: {
+      entityType: 'User',
+      metadata: {
         companyName: company.name,
         companySlug: company.slug,
       },
@@ -88,14 +89,15 @@ export async function DELETE() {
   if (impersonating) {
     await prisma.auditLog.create({
       data: {
-        actorId: admin.userId,
-        actorType: 'superadmin',
+        userId: admin.userId,
+        userRole: 'superadmin',
         companyId: impersonating.companyId as string,
         action: 'impersonation_ended',
-      details: {
-        companyName: String(impersonating.companyName || ''),
-        duration: Date.now() - new Date(impersonating.startedAt as string).getTime(),
-      },
+        entityType: 'User',
+        metadata: {
+          companyName: String(impersonating.companyName || ''),
+          duration: Date.now() - new Date(impersonating.startedAt as string).getTime(),
+        },
       },
     })
   }

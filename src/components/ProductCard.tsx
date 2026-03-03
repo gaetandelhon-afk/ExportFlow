@@ -289,7 +289,7 @@ export default function ProductCard({ product, viewMode = 'grid-large' }: Produc
           </div>
 
           <button
-            onClick={handleAddToCart}
+            onClick={() => handleAddToCart()}
             disabled={isAdding || product.stock === 0}
             className={`flex-1 rounded-xl flex items-center justify-center gap-1.5 font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50 ${
               viewMode === 'grid-small' ? 'h-7 text-[11px]' : viewMode === 'grid-medium' ? 'h-8 text-[12px]' : 'h-10 text-[13px]'

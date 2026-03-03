@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from './prisma'
 
 export type AuditAction =
@@ -71,8 +72,8 @@ export async function createAuditLog(params: AuditLogParams): Promise<void> {
         action: data.action,
         entityType: data.entityType,
         entityId: data.entityId ?? null,
-        changes: data.changes ?? undefined,
-        metadata: data.metadata ?? undefined,
+        changes: data.changes ? (data.changes as unknown as Prisma.InputJsonValue) : undefined,
+        metadata: data.metadata ? (data.metadata as unknown as Prisma.InputJsonValue) : undefined,
       },
     })
   } catch (err) {

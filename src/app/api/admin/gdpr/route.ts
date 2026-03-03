@@ -169,11 +169,12 @@ export async function DELETE(req: Request) {
   // Log the deletion
   await prisma.auditLog.create({
     data: {
-      actorId: admin.userId,
-      actorType: 'superadmin',
-      companyId: null,
+      userId: admin.userId,
+      userRole: 'superadmin',
+      companyId: company.id,
       action: 'company_permanently_deleted',
-      details: {
+      entityType: 'User',
+      metadata: {
         companyName: company.name,
         companySlug: company.slug,
         deletedCompanyId: company.id,

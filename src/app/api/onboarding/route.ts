@@ -117,9 +117,8 @@ export async function POST(req: Request) {
         // If slug column doesn't exist, create without it
         if (createErr instanceof Error && createErr.message.includes('Unknown argument')) {
           company = await prisma.company.create({
-            data: {
-              name: companyName,
-            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data: { name: companyName } as any,
           })
         } else {
           throw createErr

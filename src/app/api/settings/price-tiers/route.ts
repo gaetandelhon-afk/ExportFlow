@@ -220,7 +220,8 @@ export async function POST(request: NextRequest) {
     }
     if (supportsCurrency && currency) data.currency = currency
 
-    const tier = await prisma.priceTier.create({ data })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const tier = await prisma.priceTier.create({ data: data as any })
     return NextResponse.json({ tier })
   } catch (error) {
     console.error('Failed to create price tier:', error)
