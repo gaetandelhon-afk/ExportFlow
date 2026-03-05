@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getApiSession } from '@/lib/auth'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin'
 import { prisma } from '@/lib/prisma'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 const BUCKET_NAME = 'product-images'
 
