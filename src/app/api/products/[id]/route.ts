@@ -139,13 +139,40 @@ export async function PUT(
       }
     }
 
-    const product = await prisma.product.update({
-      where: { id },
-      data: updateData,
-      include: {
-        category: true,
-      },
-    })
+    // Photos gallery array — save all image URLs
+    if (body.photos && Array.isArray(body.photos)) {
+      updateData.photos = body.photos.filter((u: unknown) => typeof u === 'string' && u.length > 0)
+    } else if (body.images && Array.isArray(body.images)) {
+      // Derive from images array if photos not explicitly sent
+      const allUrls = body.images
+        .map((img: { url?: string }) => img.url)
+        .filter((u: unknown) => typeof u === 'string' && (u as string).length > 0)
+      if (allUrls.length > 0) {
+        updateData.photos = allUrls
+      }
+    }
+
+    let product: Awaited<ReturnType<typeof prisma.product.update>>
+    try {
+      product = await prisma.product.update({
+        where: { id },
+        data: updateData,
+        include: { category: true },
+      })
+    } catch (prismaError: unknown) {
+      // If photos column doesn't exist yet, retry without it
+      const msg = prismaError instanceof Error ? prismaError.message : ''
+      if (msg.includes('photos') || msg.includes('Unknown argument')) {
+        delete updateData.photos
+        product = await prisma.product.update({
+          where: { id },
+          data: updateData,
+          include: { category: true },
+        })
+      } else {
+        throw prismaError
+      }
+    }
 
     const oldData = {
       nameEn: existing.nameEn,

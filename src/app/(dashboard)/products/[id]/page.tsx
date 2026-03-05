@@ -167,20 +167,19 @@ export default function ProductDetailPage() {
         setPriceTiers([])
       }
 
-      // Load images - check for photoUrl first
-      if (product.photoUrl) {
-        setImages([{
-          id: 'main-image',
-          url: product.photoUrl,
-          preview: product.photoUrl,
-          isMain: true,
-        }])
-      } else if (product.images && product.images.length > 0) {
-        setImages(product.images.map((img: { id: string; url: string; isMain: boolean }) => ({
-          id: img.id,
-          url: img.url,
-          preview: img.url,
-          isMain: img.isMain,
+      // Load images — prefer photos[] gallery, fall back to single photoUrl
+      const photosArray: string[] = Array.isArray(product.photos) && product.photos.length > 0
+        ? product.photos
+        : product.photoUrl
+          ? [product.photoUrl]
+          : (product.images || []).map((img: { url: string }) => img.url).filter(Boolean)
+
+      if (photosArray.length > 0) {
+        setImages(photosArray.map((url: string, index: number) => ({
+          id: `photo-${index}-${url.split('/').pop() || index}`,
+          url,
+          preview: url,
+          isMain: url === product.photoUrl || index === 0,
         })))
       }
 
@@ -395,6 +394,7 @@ export default function ProductDetailPage() {
           prices,
           customFields: finalCustomFields,
           photoUrl,
+          photos: uploadedImages.map(img => img.url),
           images: uploadedImages,
         }),
       })
