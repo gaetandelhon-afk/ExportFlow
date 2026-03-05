@@ -31,7 +31,14 @@ export interface AuthenticatedUser {
 }
 
 export async function getAuthenticatedUser(): Promise<AuthenticatedUser | null> {
-  const user = await currentUser()
+  let user
+  try {
+    user = await currentUser()
+  } catch {
+    // currentUser() makes a network call to Clerk API (requires CLERK_SECRET_KEY).
+    // If unavailable (missing env var, network issue, etc.), fall back gracefully.
+    return null
+  }
   
   if (!user) {
     return null
