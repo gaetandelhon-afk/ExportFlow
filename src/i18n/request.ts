@@ -2,13 +2,16 @@ import { getRequestConfig } from 'next-intl/server';
 
 import { defaultLocale, locales } from './locales';
 
-export default getRequestConfig(async ({ locale }) => {
-  const resolvedLocale = locales.includes(locale as any)
-    ? (locale as (typeof locales)[number])
+export default getRequestConfig(async ({ requestLocale }) => {
+  // next-intl v4: requestLocale is a Promise — must be awaited
+  // For non-locale routes (e.g. /sign-in), this resolves to undefined → fallback to 'en'
+  const requested = await requestLocale;
+
+  const resolvedLocale = requested && locales.includes(requested as any)
+    ? (requested as (typeof locales)[number])
     : defaultLocale;
 
-  // Spec file doesn’t provide Turkish translations.
-  // We still expose `/tr` but serve English messages as a safe fallback.
+  // No Turkish translations — serve English as safe fallback
   const messageLocale = resolvedLocale === 'tr' ? 'en' : resolvedLocale;
 
   return {
@@ -16,4 +19,3 @@ export default getRequestConfig(async ({ locale }) => {
     messages: (await import(`../messages/${messageLocale}.json`)).default
   };
 });
-
