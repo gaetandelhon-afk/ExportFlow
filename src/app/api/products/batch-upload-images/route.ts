@@ -36,28 +36,12 @@ export async function POST(req: NextRequest) {
     }
 
     const product = await prisma.product.findFirst({
-      where: {
-        id: productId,
-        companyId: session.companyId
-      },
-      select: {
-        id: true,
-        ref: true,
-        photoUrl: true,
-        photos: true,
-      }
+      where: { id: productId, companyId: session.companyId },
+      select: { id: true, ref: true, photoUrl: true }
     })
 
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
-    }
-
-    // If product already has a photo and we're not replacing AND not adding to gallery:
-    // Only skip if replaceExisting=false AND there are already photos
-    // (allow adding more photos even when replaceExisting=false to build a gallery)
-    if (product.photoUrl && !replaceExisting) {
-      // Check if this exact file (by approximate name) is already in the gallery
-      // Allow adding new photos to the gallery — don't skip
     }
 
     await ensureBucketExists()
@@ -75,14 +59,14 @@ export async function POST(req: NextRequest) {
       .from(BUCKET_NAME)
       .upload(filename, buffer, {
         contentType: file.type || 'image/jpeg',
-        upsert: true
+        upsert: true,
       })
 
     if (uploadError) {
       console.error('Upload error:', uploadError)
       return NextResponse.json({
         error: 'Failed to upload image',
-        details: uploadError.message
+        details: uploadError.message,
       }, { status: 500 })
     }
 
@@ -92,41 +76,49 @@ export async function POST(req: NextRequest) {
 
     const newUrl = urlData.publicUrl
 
-    let newPhotoUrl: string
-    let newPhotos: string[]
+    // Determine the new primary photo URL
+    const newPhotoUrl = replaceExisting ? newUrl : (product.photoUrl || newUrl)
 
-    if (replaceExisting) {
-      // Replace mode: clear all existing photos, set only the new one as primary
-      newPhotoUrl = newUrl
-      newPhotos = [newUrl]
-    } else {
-      // Append mode: add to gallery, keep first photo as primary
-      const existingPhotos = Array.isArray(product.photos) ? product.photos : []
-      newPhotos = [...existingPhotos, newUrl]
-      // If no primary photo yet, set this as primary
-      newPhotoUrl = product.photoUrl || newUrl
-    }
-
+    // First: always update photoUrl (this always works)
     await prisma.product.update({
       where: { id: productId },
-      data: {
-        photoUrl: newPhotoUrl,
-        photos: newPhotos,
-      }
+      data: { photoUrl: newPhotoUrl },
     })
+
+    // Second: try to also update the photos gallery array (requires migration)
+    // Gracefully skip if the column doesn't exist yet
+    try {
+      if (replaceExisting) {
+        await prisma.$executeRawUnsafe(
+          `UPDATE products SET photos = $1 WHERE id = $2`,
+          [newUrl],
+          productId
+        )
+      } else {
+        // Append to array using Postgres array_append
+        await prisma.$executeRawUnsafe(
+          `UPDATE products SET photos = array_append(COALESCE(photos, ARRAY[]::TEXT[]), $1) WHERE id = $2`,
+          newUrl,
+          productId
+        )
+      }
+    } catch {
+      // Column 'photos' doesn't exist yet — run the SQL migration in Supabase
+      // The upload still succeeded with photoUrl, so we return success
+      console.warn('[batch-upload] photos column missing — run migration add_product_photos_gallery.sql')
+    }
 
     return NextResponse.json({
       success: true,
       imageUrl: newUrl,
-      totalPhotos: newPhotos.length,
-      sizeKb: Math.round(buffer.length / 1024)
+      sizeKb: Math.round(buffer.length / 1024),
     })
 
   } catch (error) {
     console.error('Batch upload error:', error)
     return NextResponse.json({
       error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     }, { status: 500 })
   }
 }
