@@ -45,38 +45,38 @@ export async function GET(
     if (quote.orderId) {
       try {
         charges = await (prisma as any).$queryRaw`
-          SELECT id, order_id AS "orderId", description, amount, is_automatic AS "isAutomatic", created_at AS "createdAt"
+          SELECT id, "orderId", description, amount, "isAutomatic", "createdAt"
           FROM order_charges
-          WHERE order_id = ${quote.orderId}
+          WHERE "orderId" = ${quote.orderId}
             AND invoice_id = ${id}
-          ORDER BY created_at ASC
+          ORDER BY "createdAt" ASC
         `
       } catch {
         try {
           charges = await (prisma as any).$queryRaw`
-            SELECT id, order_id AS "orderId", description, amount, is_automatic AS "isAutomatic", created_at AS "createdAt"
+            SELECT id, "orderId", description, amount, "isAutomatic", "createdAt"
             FROM order_charges
-            WHERE order_id = ${quote.orderId}
-            ORDER BY created_at ASC
+            WHERE "orderId" = ${quote.orderId}
+            ORDER BY "createdAt" ASC
           `
         } catch { charges = [] }
       }
 
       try {
         discounts = await (prisma as any).$queryRaw`
-          SELECT id, order_id AS "orderId", description, type, value, amount, created_at AS "createdAt"
+          SELECT id, "orderId", description, type, value, amount, "createdAt"
           FROM order_discounts
-          WHERE order_id = ${quote.orderId}
+          WHERE "orderId" = ${quote.orderId}
             AND invoice_id = ${id}
-          ORDER BY created_at ASC
+          ORDER BY "createdAt" ASC
         `
       } catch {
         try {
           discounts = await (prisma as any).$queryRaw`
-            SELECT id, order_id AS "orderId", description, type, value, amount, created_at AS "createdAt"
+            SELECT id, "orderId", description, type, value, amount, "createdAt"
             FROM order_discounts
-            WHERE order_id = ${quote.orderId}
-            ORDER BY created_at ASC
+            WHERE "orderId" = ${quote.orderId}
+            ORDER BY "createdAt" ASC
           `
         } catch { discounts = [] }
       }

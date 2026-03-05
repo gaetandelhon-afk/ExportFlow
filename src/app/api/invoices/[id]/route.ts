@@ -46,41 +46,39 @@ export async function GET(
 
     if (invoice.orderId) {
       try {
-        // Try with invoice_id filter (document-specific)
         charges = await (prisma as any).$queryRaw`
-          SELECT id, order_id AS "orderId", description, amount, is_automatic AS "isAutomatic", created_at AS "createdAt"
+          SELECT id, "orderId", description, amount, "isAutomatic", "createdAt"
           FROM order_charges
-          WHERE order_id = ${invoice.orderId}
+          WHERE "orderId" = ${invoice.orderId}
             AND invoice_id = ${id}
-          ORDER BY created_at ASC
+          ORDER BY "createdAt" ASC
         `
       } catch {
         try {
-          // Fallback: all charges for order (invoice_id column may not exist)
           charges = await (prisma as any).$queryRaw`
-            SELECT id, order_id AS "orderId", description, amount, is_automatic AS "isAutomatic", created_at AS "createdAt"
+            SELECT id, "orderId", description, amount, "isAutomatic", "createdAt"
             FROM order_charges
-            WHERE order_id = ${invoice.orderId}
-            ORDER BY created_at ASC
+            WHERE "orderId" = ${invoice.orderId}
+            ORDER BY "createdAt" ASC
           `
         } catch { charges = [] }
       }
 
       try {
         discounts = await (prisma as any).$queryRaw`
-          SELECT id, order_id AS "orderId", description, type, value, amount, created_at AS "createdAt"
+          SELECT id, "orderId", description, type, value, amount, "createdAt"
           FROM order_discounts
-          WHERE order_id = ${invoice.orderId}
+          WHERE "orderId" = ${invoice.orderId}
             AND invoice_id = ${id}
-          ORDER BY created_at ASC
+          ORDER BY "createdAt" ASC
         `
       } catch {
         try {
           discounts = await (prisma as any).$queryRaw`
-            SELECT id, order_id AS "orderId", description, type, value, amount, created_at AS "createdAt"
+            SELECT id, "orderId", description, type, value, amount, "createdAt"
             FROM order_discounts
-            WHERE order_id = ${invoice.orderId}
-            ORDER BY created_at ASC
+            WHERE "orderId" = ${invoice.orderId}
+            ORDER BY "createdAt" ASC
           `
         } catch { discounts = [] }
       }

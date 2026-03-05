@@ -51,11 +51,11 @@ export async function PUT(
       let charges
       if (supportsInvoiceId) {
         charges = await (prisma as any).$queryRaw`
-          SELECT amount FROM order_charges WHERE order_id = ${id} AND invoice_id = ${invoiceId}
+          SELECT amount FROM order_charges WHERE "orderId" = ${id} AND invoice_id = ${invoiceId}
         `
       } else {
         charges = await (prisma as any).$queryRaw`
-          SELECT amount FROM order_charges WHERE order_id = ${id}
+          SELECT amount FROM order_charges WHERE "orderId" = ${id}
         `
       }
       chargesTotal = (charges || []).reduce((sum: number, c: { amount: unknown }) => sum + Number(c.amount), 0)
@@ -64,11 +64,11 @@ export async function PUT(
     // Delete existing discounts using raw SQL
     if (supportsInvoiceId) {
       await (prisma as any).$executeRaw`
-        DELETE FROM order_discounts WHERE order_id = ${id} AND invoice_id = ${invoiceId}
+        DELETE FROM order_discounts WHERE "orderId" = ${id} AND invoice_id = ${invoiceId}
       `
     } else {
       await (prisma as any).$executeRaw`
-        DELETE FROM order_discounts WHERE order_id = ${id}
+        DELETE FROM order_discounts WHERE "orderId" = ${id}
       `
     }
 
@@ -92,15 +92,15 @@ export async function PUT(
       let inserted
       if (supportsInvoiceId) {
         inserted = await (prisma as any).$queryRaw`
-          INSERT INTO order_discounts (id, order_id, invoice_id, description, type, value, amount, created_at, updated_at)
+          INSERT INTO order_discounts (id, "orderId", invoice_id, description, type, value, amount, "createdAt", "updatedAt")
           VALUES (gen_random_uuid()::text, ${id}, ${invoiceId}, ${description}, ${d.type}, ${Number(d.value)}::decimal, ${amount}::decimal, NOW(), NOW())
-          RETURNING id, order_id AS "orderId", invoice_id AS "invoiceId", description, type, value, amount, created_at AS "createdAt"
+          RETURNING id, "orderId", invoice_id AS "invoiceId", description, type, value, amount, "createdAt"
         `
       } else {
         inserted = await (prisma as any).$queryRaw`
-          INSERT INTO order_discounts (id, order_id, description, type, value, amount, created_at, updated_at)
+          INSERT INTO order_discounts (id, "orderId", description, type, value, amount, "createdAt", "updatedAt")
           VALUES (gen_random_uuid()::text, ${id}, ${description}, ${d.type}, ${Number(d.value)}::decimal, ${amount}::decimal, NOW(), NOW())
-          RETURNING id, order_id AS "orderId", description, type, value, amount, created_at AS "createdAt"
+          RETURNING id, "orderId", description, type, value, amount, "createdAt"
         `
       }
       if (Array.isArray(inserted) && inserted.length > 0) newDiscounts.push(inserted[0])
@@ -135,17 +135,17 @@ export async function GET(
     let discounts
     if (invoiceId && await hasInvoiceIdColumn()) {
       discounts = await (prisma as any).$queryRaw`
-        SELECT id, order_id AS "orderId", description, type, value, amount, created_at AS "createdAt"
+        SELECT id, "orderId", description, type, value, amount, "createdAt"
         FROM order_discounts
-        WHERE order_id = ${id} AND invoice_id = ${invoiceId}
-        ORDER BY created_at ASC
+        WHERE "orderId" = ${id} AND invoice_id = ${invoiceId}
+        ORDER BY "createdAt" ASC
       `
     } else {
       discounts = await (prisma as any).$queryRaw`
-        SELECT id, order_id AS "orderId", description, type, value, amount, created_at AS "createdAt"
+        SELECT id, "orderId", description, type, value, amount, "createdAt"
         FROM order_discounts
-        WHERE order_id = ${id}
-        ORDER BY created_at ASC
+        WHERE "orderId" = ${id}
+        ORDER BY "createdAt" ASC
       `
     }
     return NextResponse.json({ discounts: discounts || [] })
@@ -176,11 +176,11 @@ export async function DELETE(
 
     if (invoiceId && await hasInvoiceIdColumn()) {
       await (prisma as any).$executeRaw`
-        DELETE FROM order_discounts WHERE order_id = ${id} AND invoice_id = ${invoiceId}
+        DELETE FROM order_discounts WHERE "orderId" = ${id} AND invoice_id = ${invoiceId}
       `
     } else {
       await (prisma as any).$executeRaw`
-        DELETE FROM order_discounts WHERE order_id = ${id}
+        DELETE FROM order_discounts WHERE "orderId" = ${id}
       `
     }
 
