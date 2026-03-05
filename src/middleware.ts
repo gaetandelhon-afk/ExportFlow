@@ -11,6 +11,7 @@ const isPublicRoute = createRouteMatcher([
   '/',
   '/pricing',
   '/about',
+  '/auth-redirect',
   ...locales.map((l) => `/${l}(.*)`),
   '/sign-in(.*)',
   '/sign-up(.*)',

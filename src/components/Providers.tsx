@@ -16,7 +16,7 @@ export default function Providers({ children }: ProvidersProps) {
   return (
     <ClerkProvider
       afterSignOutUrl="/"
-      signInFallbackRedirectUrl="/dashboard"
+      signInFallbackRedirectUrl="/auth-redirect"
       signUpFallbackRedirectUrl="/onboarding"
     >
       <ThemeProvider>

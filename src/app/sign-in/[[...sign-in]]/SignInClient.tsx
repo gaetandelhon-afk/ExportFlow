@@ -34,6 +34,7 @@ export default function SignInClient() {
           </div>
           
           <SignIn
+            fallbackRedirectUrl="/auth-redirect"
             appearance={{
               baseTheme: isDark ? dark : undefined,
               elements: {

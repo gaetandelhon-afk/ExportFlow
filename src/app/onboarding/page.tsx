@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useUser } from '@clerk/nextjs'
-import { Building2, Globe, Loader2, CheckCircle, Link2, AlertCircle, Mail } from 'lucide-react'
+import { Building2, Globe, Loader2, CheckCircle, Link2, AlertCircle, Mail, Phone } from 'lucide-react'
 
 const COUNTRIES = [
   { code: 'FR', name: 'France' },
@@ -40,6 +40,7 @@ export default function OnboardingPage() {
   const [slugCheckReason, setSlugCheckReason] = useState('')
   const [checkingSlug, setCheckingSlug] = useState(false)
   const [country, setCountry] = useState('')
+  const [phone, setPhone] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -115,6 +116,7 @@ export default function OnboardingPage() {
           companyName: companyName.trim(),
           country,
           slug,
+          phone: phone.trim() || undefined,
         }),
       })
 
@@ -171,6 +173,28 @@ export default function OnboardingPage() {
                 />
                 <p className="mt-1 text-xs text-slate-400">
                   We&apos;ll use this email to send you order notifications and updates
+                </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2"
+                >
+                  <Phone className="h-4 w-4" />
+                  Phone Number <span className="text-slate-400 font-normal">(optional)</span>
+                </label>
+                <input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1 555 000 0000"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  disabled={isSubmitting}
+                />
+                <p className="mt-1 text-xs text-slate-400">
+                  Used for account recovery and important notifications
                 </p>
               </div>
 

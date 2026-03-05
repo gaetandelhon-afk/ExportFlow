@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { companyName, country, slug: rawSlug } = body
+    const { companyName, country, slug: rawSlug, phone } = body
 
     if (!companyName || !country) {
       return NextResponse.json(
@@ -140,6 +140,18 @@ export async function POST(req: Request) {
       },
     })
 
+    // Save phone number to Clerk user profile if provided
+    if (phone) {
+      try {
+        await client.users.updateUser(userId, {
+          // Store phone in unsafeMetadata since Clerk phone numbers require verification
+          unsafeMetadata: { phone },
+        })
+      } catch {
+        // Non-critical — don't fail onboarding if phone save fails
+      }
+    }
+
     await client.users.updateUserMetadata(userId, {
       publicMetadata: {
         plan: 'business',
@@ -147,6 +159,7 @@ export async function POST(req: Request) {
         companyName,
         companySlug: slug,
         country,
+        phone: phone || undefined,
         role: 'owner',
         onboardingComplete: true,
         subscriptionStatus: 'trialing',
