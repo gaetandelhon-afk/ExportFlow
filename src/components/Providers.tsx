@@ -15,7 +15,7 @@ interface ProvidersProps {
 export default function Providers({ children }: ProvidersProps) {
   return (
     <ClerkProvider
-      afterSignOutUrl="/"
+      afterSignOutUrl="https://exportflow.io"
       signInFallbackRedirectUrl="/auth-redirect"
       signUpFallbackRedirectUrl="/onboarding"
     >

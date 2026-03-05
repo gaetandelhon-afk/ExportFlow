@@ -7,7 +7,6 @@ import { useMemo, useState } from 'react';
 
 import { LanguageSwitcher } from '@/components/marketing/layout/LanguageSwitcher';
 import { Logo } from '@/components/marketing/layout/Logo';
-import { ThemeToggle } from '@/components/marketing/layout/ThemeToggle';
 import { Button } from '@/components/marketing/ui/Button';
 import { Container } from '@/components/marketing/ui/Container';
 import { cn } from '@/lib/cn';
@@ -71,7 +70,6 @@ export function Header() {
           <div className="hidden">
             <LanguageSwitcher />
           </div>
-          <ThemeToggle />
           <Link href="/sign-in">
             <Button variant="ghost" size="sm">
               {t('login')}
@@ -86,7 +84,6 @@ export function Header() {
           <div className="hidden">
             <LanguageSwitcher />
           </div>
-          <ThemeToggle />
           <Button
             variant="ghost"
             size="sm"
