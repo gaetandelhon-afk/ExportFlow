@@ -97,12 +97,15 @@ export function matchImagesToProducts(
     if (bestMatch && bestMatch.score >= 0.7) {
       matchedProduct = bestMatch.product
 
+      // 'duplicate' = product already has a photo OR another file in this batch
+      // already matched to it. We still set productId so all can be uploaded to gallery.
       if (matchedProduct.photoUrl || matchedProductIds.has(matchedProduct.id)) {
         status = 'duplicate'
       } else {
         status = 'matched'
-        matchedProductIds.add(matchedProduct.id)
       }
+      // Always track to detect further duplicates in same batch
+      matchedProductIds.add(matchedProduct.id)
     } else if (bestMatch && bestMatch.score >= 0.5) {
       matchedProduct = bestMatch.product
       status = 'low-confidence'
@@ -111,7 +114,8 @@ export function matchImagesToProducts(
     matches.push({
       filename: file.name,
       file,
-      productId: status === 'matched' ? matchedProduct?.id || null : null,
+      // Always include productId for matched/duplicate so they can be uploaded
+      productId: matchedProduct?.id || null,
       productRef: matchedProduct?.ref || '',
       productName: matchedProduct?.nameEn || '',
       confidence: bestMatch?.score || 0,

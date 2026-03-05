@@ -243,6 +243,7 @@ model Product {
   material     String?
   hsCode       String?
   photoUrl     String?
+  photos       String[]  @default([])
   weightKg     Decimal?
   isActive     Boolean   @default(true)
   sortOrder    Int       @default(0)

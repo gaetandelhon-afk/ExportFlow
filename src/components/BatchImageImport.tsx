@@ -114,15 +114,12 @@ export default function BatchImageImport() {
   }
 
   const handleUpload = async () => {
-    const toUpload = matches.filter(m => {
-      if (!m.productId) return false
-      if (m.status === 'matched') return true
-      if (m.status === 'duplicate' && replaceExisting) return true
-      return false
-    })
+    // Include all images with a productId — both 'matched' (first for a product)
+    // and 'duplicate' (additional images → go to gallery)
+    const toUpload = matches.filter(m => m.productId !== null && m.status !== 'no-match')
 
     if (toUpload.length === 0) {
-      alert('No images to upload. Check "Replace existing images" to overwrite products that already have a photo.')
+      alert('No images to upload. Please assign each image to a product first.')
       return
     }
 
@@ -132,15 +129,24 @@ export default function BatchImageImport() {
 
     const results: UploadResult[] = []
 
+    // Track which products have already received their first upload in this batch.
+    // Only the first image per product respects the replaceExisting flag;
+    // subsequent ones always append to the gallery.
+    const firstUploadedPerProduct = new Set<string>()
+
     for (let i = 0; i < toUpload.length; i++) {
       const match = toUpload[i]
       setCurrentUploadIndex(i + 1)
+
+      const isFirstForProduct = !firstUploadedPerProduct.has(match.productId!)
+      const shouldReplace = isFirstForProduct && replaceExisting
+      if (isFirstForProduct) firstUploadedPerProduct.add(match.productId!)
 
       try {
         const formData = new FormData()
         formData.append('file', match.file)
         formData.append('productId', match.productId!)
-        formData.append('replaceExisting', replaceExisting.toString())
+        formData.append('replaceExisting', shouldReplace.toString())
 
         const res = await fetch('/api/products/batch-upload-images', {
           method: 'POST',
@@ -473,9 +479,9 @@ export default function BatchImageImport() {
                             </span>
                           )}
                           {match.status === 'duplicate' && (
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#86868b]/10 text-[#86868b] text-[10px] font-medium rounded">
-                              <AlertCircle className="w-2.5 h-2.5" />
-                              Exists
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#5856d6]/10 text-[#5856d6] text-[10px] font-medium rounded">
+                              <ImageIcon className="w-2.5 h-2.5" />
+                              +Gallery
                             </span>
                           )}
                         </td>
@@ -496,12 +502,9 @@ export default function BatchImageImport() {
               </button>
 
               {(() => {
-                const uploadCount = matches.filter(m => {
-                  if (!m.productId) return false
-                  if (m.status === 'matched') return true
-                  if (m.status === 'duplicate' && replaceExisting) return true
-                  return false
-                }).length
+                const uploadCount = matches.filter(
+                  m => m.productId !== null && m.status !== 'no-match'
+                ).length
                 return (
                   <button
                     onClick={handleUpload}
@@ -523,13 +526,13 @@ export default function BatchImageImport() {
             <Loader2 className="w-8 h-8 text-[#0071e3] animate-spin mx-auto mb-3" />
             <p className="text-[14px] font-semibold text-[#1d1d1f] mb-1">Uploading Images</p>
             <p className="text-[12px] text-[#86868b] mb-3">
-              {currentUploadIndex} of {matches.filter(m => m.productId && (m.status === 'matched' || (m.status === 'duplicate' && replaceExisting))).length}
+              {currentUploadIndex} of {matches.filter(m => m.productId !== null && m.status !== 'no-match').length}
             </p>
             <div className="max-w-xs mx-auto h-2 bg-[#d2d2d7]/30 rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#0071e3] transition-all duration-300"
                 style={{
-                  width: `${(currentUploadIndex / Math.max(1, matches.filter(m => m.productId && (m.status === 'matched' || (m.status === 'duplicate' && replaceExisting))).length)) * 100}%`
+                  width: `${(currentUploadIndex / Math.max(1, matches.filter(m => m.productId !== null && m.status !== 'no-match').length)) * 100}%`
                 }}
               />
             </div>
