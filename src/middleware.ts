@@ -173,7 +173,15 @@ export default clerkMiddleware(async (auth, req) => {
     }
 
     if (confirmedOnboarding && isOnboardingRoute(req)) {
-      return NextResponse.redirect(new URL('/dashboard', req.url))
+      // Redirect to subdomain dashboard if possible, otherwise use auth-redirect
+      if (companySlug) {
+        const host = hostname.toLowerCase().replace(/:\d+$/, '')
+        const isProd = host === 'exportflow.io' || host === 'www.exportflow.io'
+        if (isProd) {
+          return NextResponse.redirect(`https://${companySlug}.exportflow.io/dashboard`)
+        }
+      }
+      return NextResponse.redirect(new URL('/auth-redirect', req.url))
     }
 
     return NextResponse.next()
