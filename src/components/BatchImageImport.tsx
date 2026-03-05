@@ -114,12 +114,15 @@ export default function BatchImageImport() {
   }
 
   const handleUpload = async () => {
-    const toUpload = matches.filter(m =>
-      m.status === 'matched' && m.productId !== null
-    )
+    const toUpload = matches.filter(m => {
+      if (!m.productId) return false
+      if (m.status === 'matched') return true
+      if (m.status === 'duplicate' && replaceExisting) return true
+      return false
+    })
 
     if (toUpload.length === 0) {
-      alert('No images to upload')
+      alert('No images to upload. Check "Replace existing images" to overwrite products that already have a photo.')
       return
     }
 
@@ -492,14 +495,24 @@ export default function BatchImageImport() {
                 Cancel
               </button>
 
-              <button
-                onClick={handleUpload}
-                disabled={stats.matched === 0}
-                className="h-9 px-4 flex items-center gap-2 text-[13px] font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ed] disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Upload className="w-3.5 h-3.5" />
-                Upload {stats.matched} Image{stats.matched !== 1 ? 's' : ''}
-              </button>
+              {(() => {
+                const uploadCount = matches.filter(m => {
+                  if (!m.productId) return false
+                  if (m.status === 'matched') return true
+                  if (m.status === 'duplicate' && replaceExisting) return true
+                  return false
+                }).length
+                return (
+                  <button
+                    onClick={handleUpload}
+                    disabled={uploadCount === 0}
+                    className="h-9 px-4 flex items-center gap-2 text-[13px] font-medium text-white bg-[#0071e3] rounded-lg hover:bg-[#0077ed] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    Upload {uploadCount} Image{uploadCount !== 1 ? 's' : ''}
+                  </button>
+                )
+              })()}
             </div>
           </div>
         )}
@@ -510,13 +523,13 @@ export default function BatchImageImport() {
             <Loader2 className="w-8 h-8 text-[#0071e3] animate-spin mx-auto mb-3" />
             <p className="text-[14px] font-semibold text-[#1d1d1f] mb-1">Uploading Images</p>
             <p className="text-[12px] text-[#86868b] mb-3">
-              {currentUploadIndex} of {matches.filter(m => m.status === 'matched').length}
+              {currentUploadIndex} of {matches.filter(m => m.productId && (m.status === 'matched' || (m.status === 'duplicate' && replaceExisting))).length}
             </p>
             <div className="max-w-xs mx-auto h-2 bg-[#d2d2d7]/30 rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#0071e3] transition-all duration-300"
                 style={{
-                  width: `${(currentUploadIndex / matches.filter(m => m.status === 'matched').length) * 100}%`
+                  width: `${(currentUploadIndex / Math.max(1, matches.filter(m => m.productId && (m.status === 'matched' || (m.status === 'duplicate' && replaceExisting))).length)) * 100}%`
                 }}
               />
             </div>
