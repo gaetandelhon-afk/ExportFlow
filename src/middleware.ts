@@ -94,7 +94,28 @@ export default clerkMiddleware(async (auth, req) => {
     const headers = new Headers(req.headers)
     headers.set('x-tenant-slug', subdomain)
 
-    if (isPublicRoute(req) || isApiRoute(req)) {
+    const path = req.nextUrl.pathname
+
+    // Marketing routes should NOT be served on tenant subdomains
+    // Redirect root and marketing paths to the distributor catalog
+    const isMarketingPath = path === '/' || path === '/pricing' || path === '/about' || path === '/features' || path === '/contact' || path === '/terms' || path === '/privacy' || path === '/security'
+    if (isMarketingPath) {
+      if (!userId) {
+        // Not logged in → go to sign-in, then redirect back to catalog
+        const signInUrl = new URL('/sign-in', req.url)
+        signInUrl.searchParams.set('redirect_url', new URL('/catalog', req.url).toString())
+        return NextResponse.redirect(signInUrl)
+      }
+      return NextResponse.redirect(new URL('/catalog', req.url))
+    }
+
+    if (isApiRoute(req)) {
+      return NextResponse.next({ request: { headers } })
+    }
+
+    // Allow auth routes and webhooks to pass through freely on subdomains
+    const isAuthPath = path.startsWith('/sign-in') || path.startsWith('/sign-up') || path.startsWith('/auth-redirect') || path.startsWith('/api/webhooks') || path.startsWith('/onboarding')
+    if (isAuthPath) {
       return NextResponse.next({ request: { headers } })
     }
 
@@ -105,17 +126,13 @@ export default clerkMiddleware(async (auth, req) => {
     }
 
     if (subscriptionStatus === 'expired') {
-      const pricingUrl = new URL('/pricing', req.url)
-      pricingUrl.searchParams.set('reason', 'trial_ended')
-      return NextResponse.redirect(pricingUrl)
+      return NextResponse.redirect(`https://exportflow.io/pricing?reason=trial_ended`)
     }
 
     if (subscriptionStatus === 'canceled') {
       const accessUntil = metadata.accessUntil as string | undefined
       if (accessUntil && new Date(accessUntil) < new Date()) {
-        const pricingUrl = new URL('/pricing', req.url)
-        pricingUrl.searchParams.set('reason', 'subscription_ended')
-        return NextResponse.redirect(pricingUrl)
+        return NextResponse.redirect(`https://exportflow.io/pricing?reason=subscription_ended`)
       }
     }
 
