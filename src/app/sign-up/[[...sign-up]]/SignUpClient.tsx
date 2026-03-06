@@ -34,6 +34,7 @@ export default function SignUpClient() {
           </div>
           
           <SignUp
+            forceRedirectUrl="/auth-redirect"
             appearance={{
               baseTheme: isDark ? dark : undefined,
               elements: {
