@@ -222,42 +222,44 @@ export default function SubscriptionPage() {
       )}
 
       {/* Portal URL */}
-      {user?.publicMetadata?.companySlug && (
-        <div className="rounded-2xl border border-[#d2d2d7]/30 bg-white p-6 mb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
-              <Globe className="w-4 h-4 text-[#0071e3]" />
+      {(() => {
+        const slug = user?.publicMetadata?.companySlug as string | undefined
+        if (!slug) return null
+        return (
+          <div className="rounded-2xl border border-[#d2d2d7]/30 bg-white p-6 mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-lg bg-[#f5f5f7] flex items-center justify-center">
+                <Globe className="w-4 h-4 text-[#0071e3]" />
+              </div>
+              <div>
+                <h3 className="text-[15px] font-semibold text-[#1d1d1f]">Your Distributor Portal</h3>
+                <p className="text-[13px] text-[#86868b]">Share this URL with your customers</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-[15px] font-semibold text-[#1d1d1f]">Your Distributor Portal</h3>
-              <p className="text-[13px] text-[#86868b]">Share this URL with your customers</p>
+            <div className="flex items-center gap-3 mt-3 p-3 rounded-xl bg-[#f5f5f7]">
+              <code className="flex-1 text-[14px] font-mono text-[#0071e3]">
+                {slug}.exportflow.io
+              </code>
+              <button
+                onClick={() => navigator.clipboard.writeText(`https://${slug}.exportflow.io`)}
+                className="p-1.5 rounded-lg hover:bg-[#e8e8ed] transition-colors"
+                title="Copy URL"
+              >
+                <Copy className="w-4 h-4 text-[#86868b]" />
+              </button>
+              <a
+                href={`https://${slug}.exportflow.io`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-1.5 rounded-lg hover:bg-[#e8e8ed] transition-colors"
+                title="Open portal"
+              >
+                <ExternalLink className="w-4 h-4 text-[#86868b]" />
+              </a>
             </div>
           </div>
-          <div className="flex items-center gap-3 mt-3 p-3 rounded-xl bg-[#f5f5f7]">
-            <code className="flex-1 text-[14px] font-mono text-[#0071e3]">
-              {String(user.publicMetadata.companySlug)}.exportflow.io
-            </code>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(`https://${String(user?.publicMetadata?.companySlug)}.exportflow.io`)
-              }}
-              className="p-1.5 rounded-lg hover:bg-[#e8e8ed] transition-colors"
-              title="Copy URL"
-            >
-              <Copy className="w-4 h-4 text-[#86868b]" />
-            </button>
-            <a
-              href={`https://${String(user.publicMetadata.companySlug)}.exportflow.io`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-1.5 rounded-lg hover:bg-[#e8e8ed] transition-colors"
-              title="Open portal"
-            >
-              <ExternalLink className="w-4 h-4 text-[#86868b]" />
-            </a>
-          </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Current Plan */}
       <div className="rounded-2xl border border-[#d2d2d7]/30 bg-white p-6 mb-6">
