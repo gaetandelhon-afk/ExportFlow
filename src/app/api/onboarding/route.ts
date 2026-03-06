@@ -185,8 +185,9 @@ export async function POST(req: Request) {
     })
   } catch (error) {
     console.error('Onboarding error:', error)
+    const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json(
-      { error: 'An error occurred during setup' },
+      { error: 'An error occurred during setup', detail: message },
       { status: 500 }
     )
   }

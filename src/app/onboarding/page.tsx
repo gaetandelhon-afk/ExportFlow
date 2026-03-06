@@ -122,7 +122,7 @@ export default function OnboardingPage() {
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || 'An error occurred')
+        throw new Error(data.detail || data.error || 'An error occurred')
       }
 
       window.location.href = '/dashboard'
